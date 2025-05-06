@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -90,7 +91,7 @@ export const RequestCard: React.FC<RequestProps> = ({
       setIsUpdating(true);
       await updateRequestStatus(request.id, 'delivered');
       toast.success(`Marked ${request.title} as delivered`);
-      if (onStatusChange) onStatusChange();
+      if (onStatusChange) onStatusChange('delivered');
       setShowDetails(false);
     } catch (error) {
       console.error('Error updating status:', error);
@@ -106,7 +107,7 @@ export const RequestCard: React.FC<RequestProps> = ({
       await updateRequestStatus(request.id, 'approved');
       toast.success(`Approved ${request.title}`);
       toast.info(`Request sent to suppliers for quotes`);
-      if (onStatusChange) onStatusChange();
+      if (onStatusChange) onStatusChange('approved');
       setShowDetails(false);
     } catch (error) {
       console.error('Error updating status:', error);
@@ -121,7 +122,7 @@ export const RequestCard: React.FC<RequestProps> = ({
       setIsUpdating(true);
       await updateRequestStatus(request.id, 'rejected');
       toast.error(`Rejected ${request.title}`);
-      if (onStatusChange) onStatusChange();
+      if (onStatusChange) onStatusChange('rejected');
       setShowDetails(false);
     } catch (error) {
       console.error('Error updating status:', error);
