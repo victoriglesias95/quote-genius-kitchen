@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Sidebar,
   SidebarContent,
@@ -23,14 +24,18 @@ import {
   Settings, 
   Mail,
   LayoutGrid,
-  Database
+  Database,
+  LogOut
 } from "lucide-react";
+import { Button } from '@/components/ui/button';
 
 export function AppSidebar() {
   const location = useLocation();
+  const { user, logout } = useAuth();
   
-  const menuItems = [
-    { title: "Dashboard", path: "/", icon: Home },
+  // Menu items for purchasing department
+  const purchasingMenuItems = [
+    { title: "Dashboard", path: "/dashboard", icon: Home },
     { title: "Suppliers", path: "/suppliers", icon: Users },
     { title: "Product Database", path: "/products/database", icon: Database },
     { title: "Ingredients", path: "/ingredients", icon: Package },
@@ -47,13 +52,18 @@ export function AppSidebar() {
           <Mail className="h-6 w-6 text-orange" />
           <h1 className="text-lg font-display font-semibold text-white">ProcureChef</h1>
         </div>
+        {user && (
+          <div className="mt-2 text-sm text-sidebar-foreground opacity-70">
+            Logged in as {user.name} ({user.role})
+          </div>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground opacity-70">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {purchasingMenuItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton asChild className={location.pathname === item.path ? "active" : ""}>
                     <Link to={item.path} className="nav-link">
@@ -68,8 +78,14 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-4 border-t border-sidebar-border">
-        <div className="text-xs text-sidebar-foreground opacity-50">
-          ProcureChef v1.0.0
+        <div className="flex flex-col space-y-2">
+          <Button variant="outline" onClick={logout} className="w-full justify-start">
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+          <div className="text-xs text-sidebar-foreground opacity-50">
+            ProcureChef v1.0.0
+          </div>
         </div>
       </SidebarFooter>
     </Sidebar>
