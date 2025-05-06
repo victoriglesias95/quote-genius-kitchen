@@ -18,10 +18,10 @@ export const sampleSuppliers: Supplier[] = [
     phone: '(555) 123-4567',
     status: 'active',
     products: [
-      { id: '101', name: 'Organic Apples', category: 'Fruits', unit: 'kg', defaultPrice: 3.99 },
-      { id: '102', name: 'Carrots', category: 'Vegetables', unit: 'kg', defaultPrice: 2.49 },
-      { id: '103', name: 'Lettuce', category: 'Vegetables', unit: 'each', defaultPrice: 1.99 },
-      { id: '104', name: 'Tomatoes', category: 'Vegetables', unit: 'kg', defaultPrice: 4.29 }
+      { id: '101', name: 'Organic Apples', category: 'Fruits', units: ['kg'], defaultPrice: 3.99 },
+      { id: '102', name: 'Carrots', category: 'Vegetables', units: ['kg'], defaultPrice: 2.49 },
+      { id: '103', name: 'Lettuce', category: 'Vegetables', units: ['each'], defaultPrice: 1.99 },
+      { id: '104', name: 'Tomatoes', category: 'Vegetables', units: ['kg'], defaultPrice: 4.29 }
     ]
   },
   {
@@ -33,9 +33,9 @@ export const sampleSuppliers: Supplier[] = [
     phone: '(555) 234-5678',
     status: 'active',
     products: [
-      { id: '201', name: 'Fresh Salmon', category: 'Fish', unit: 'kg', defaultPrice: 19.99 },
-      { id: '202', name: 'Shrimp', category: 'Shellfish', unit: 'kg', defaultPrice: 24.99 },
-      { id: '203', name: 'Cod Fillets', category: 'Fish', unit: 'kg', defaultPrice: 15.49 }
+      { id: '201', name: 'Fresh Salmon', category: 'Fish', units: ['kg'], defaultPrice: 19.99 },
+      { id: '202', name: 'Shrimp', category: 'Shellfish', units: ['kg'], defaultPrice: 24.99 },
+      { id: '203', name: 'Cod Fillets', category: 'Fish', units: ['kg'], defaultPrice: 15.49 }
     ]
   },
   {
@@ -47,10 +47,10 @@ export const sampleSuppliers: Supplier[] = [
     phone: '(555) 345-6789',
     status: 'inactive',
     products: [
-      { id: '301', name: 'Beef Sirloin', category: 'Beef', unit: 'kg', defaultPrice: 18.99 },
-      { id: '302', name: 'Chicken Breast', category: 'Poultry', unit: 'kg', defaultPrice: 9.99 },
-      { id: '303', name: 'Pork Chops', category: 'Pork', unit: 'kg', defaultPrice: 12.49 },
-      { id: '304', name: 'Ground Beef', category: 'Beef', unit: 'kg', defaultPrice: 11.99 }
+      { id: '301', name: 'Beef Sirloin', category: 'Beef', units: ['kg'], defaultPrice: 18.99 },
+      { id: '302', name: 'Chicken Breast', category: 'Poultry', units: ['kg'], defaultPrice: 9.99 },
+      { id: '303', name: 'Pork Chops', category: 'Pork', units: ['kg'], defaultPrice: 12.49 },
+      { id: '304', name: 'Ground Beef', category: 'Beef', units: ['kg'], defaultPrice: 11.99 }
     ]
   },
   {
@@ -62,9 +62,9 @@ export const sampleSuppliers: Supplier[] = [
     phone: '(555) 456-7890',
     status: 'active',
     products: [
-      { id: '401', name: 'Organic Milk', category: 'Milk', unit: 'liter', defaultPrice: 3.79 },
-      { id: '402', name: 'Cheese', category: 'Cheese', unit: 'kg', defaultPrice: 14.99 },
-      { id: '403', name: 'Yogurt', category: 'Yogurt', unit: 'kg', defaultPrice: 6.49 }
+      { id: '401', name: 'Organic Milk', category: 'Milk', units: ['liter'], defaultPrice: 3.79 },
+      { id: '402', name: 'Cheese', category: 'Cheese', units: ['kg'], defaultPrice: 14.99 },
+      { id: '403', name: 'Yogurt', category: 'Yogurt', units: ['kg'], defaultPrice: 6.49 }
     ]
   },
   {
@@ -76,10 +76,10 @@ export const sampleSuppliers: Supplier[] = [
     phone: '(555) 567-8901',
     status: 'active',
     products: [
-      { id: '501', name: 'Organic Apples', category: 'Fruits', unit: 'kg', defaultPrice: 4.29 },
-      { id: '502', name: 'Carrots', category: 'Vegetables', unit: 'kg', defaultPrice: 2.29 },
-      { id: '503', name: 'Lettuce', category: 'Vegetables', unit: 'each', defaultPrice: 2.19 },
-      { id: '504', name: 'Tomatoes', category: 'Vegetables', unit: 'kg', defaultPrice: 3.99 }
+      { id: '501', name: 'Organic Apples', category: 'Fruits', units: ['kg'], defaultPrice: 4.29 },
+      { id: '502', name: 'Carrots', category: 'Vegetables', units: ['kg'], defaultPrice: 2.29 },
+      { id: '503', name: 'Lettuce', category: 'Vegetables', units: ['each'], defaultPrice: 2.19 },
+      { id: '504', name: 'Tomatoes', category: 'Vegetables', units: ['kg'], defaultPrice: 3.99 }
     ]
   },
   {
@@ -91,9 +91,9 @@ export const sampleSuppliers: Supplier[] = [
     phone: '(555) 678-9012',
     status: 'active',
     products: [
-      { id: '601', name: 'Fresh Salmon', category: 'Fish', unit: 'kg', defaultPrice: 21.50 },
-      { id: '602', name: 'Shrimp', category: 'Shellfish', unit: 'kg', defaultPrice: 23.99 },
-      { id: '603', name: 'Cod Fillets', category: 'Fish', unit: 'kg', defaultPrice: 14.85 }
+      { id: '601', name: 'Fresh Salmon', category: 'Fish', units: ['kg'], defaultPrice: 21.50 },
+      { id: '602', name: 'Shrimp', category: 'Shellfish', units: ['kg'], defaultPrice: 23.99 },
+      { id: '603', name: 'Cod Fillets', category: 'Fish', units: ['kg'], defaultPrice: 14.85 }
     ]
   },
   {
@@ -105,10 +105,10 @@ export const sampleSuppliers: Supplier[] = [
     phone: '(555) 789-0123',
     status: 'active',
     products: [
-      { id: '701', name: 'Beef Sirloin', category: 'Beef', unit: 'kg', defaultPrice: 19.99 },
-      { id: '702', name: 'Chicken Breast', category: 'Poultry', unit: 'kg', defaultPrice: 8.99 },
-      { id: '703', name: 'Pork Chops', category: 'Pork', unit: 'kg', defaultPrice: 11.99 },
-      { id: '704', name: 'Ground Beef', category: 'Beef', unit: 'kg', defaultPrice: 10.99 }
+      { id: '701', name: 'Beef Sirloin', category: 'Beef', units: ['kg'], defaultPrice: 19.99 },
+      { id: '702', name: 'Chicken Breast', category: 'Poultry', units: ['kg'], defaultPrice: 8.99 },
+      { id: '703', name: 'Pork Chops', category: 'Pork', units: ['kg'], defaultPrice: 11.99 },
+      { id: '704', name: 'Ground Beef', category: 'Beef', units: ['kg'], defaultPrice: 10.99 }
     ]
   },
   {
@@ -120,9 +120,9 @@ export const sampleSuppliers: Supplier[] = [
     phone: '(555) 890-1234',
     status: 'active',
     products: [
-      { id: '801', name: 'Organic Milk', category: 'Milk', unit: 'liter', defaultPrice: 3.49 },
-      { id: '802', name: 'Cheese', category: 'Cheese', unit: 'kg', defaultPrice: 13.50 },
-      { id: '803', name: 'Yogurt', category: 'Yogurt', unit: 'kg', defaultPrice: 5.99 }
+      { id: '801', name: 'Organic Milk', category: 'Milk', units: ['liter'], defaultPrice: 3.49 },
+      { id: '802', name: 'Cheese', category: 'Cheese', units: ['kg'], defaultPrice: 13.50 },
+      { id: '803', name: 'Yogurt', category: 'Yogurt', units: ['kg'], defaultPrice: 5.99 }
     ]
   }
 ];

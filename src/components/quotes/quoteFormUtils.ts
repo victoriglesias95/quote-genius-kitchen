@@ -12,7 +12,7 @@ export const generateItemsFromSupplier = (supplierId: string): ItemType[] => {
       id: product.id,
       name: product.name,
       quantity: '1', // Default quantity
-      unit: product.unit
+      unit: product.units[0] // Use the first unit in the array
     }));
   } 
   

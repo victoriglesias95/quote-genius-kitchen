@@ -52,7 +52,7 @@ export function ProductComparisonTable({ products }: ProductComparisonTableProps
               <TableRow key={product.id}>
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>{product.category}</TableCell>
-                <TableCell>{product.unit}</TableCell>
+                <TableCell>{product.units.join(', ')}</TableCell>
                 <TableCell>
                   {bestPriceSupplier ? (
                     <div className="flex flex-col">
