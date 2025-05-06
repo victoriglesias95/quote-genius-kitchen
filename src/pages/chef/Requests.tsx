@@ -2,22 +2,14 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { 
-  Badge, 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle,
-  Input,
-  Button,
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from '@/components/ui';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import ChefLayout from '@/components/layout/ChefLayout';
 import { Search, Filter, Clock } from 'lucide-react';
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 // Sample request data
 const sampleRequests = [
