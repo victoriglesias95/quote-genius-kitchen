@@ -14,6 +14,14 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { sampleSuppliers } from '@/pages/Suppliers';
+
+type ItemType = {
+  id: string;
+  name: string;
+  quantity: string;
+  unit: string;
+};
 
 export function QuoteForm() {
   const { toast } = useToast();
@@ -21,12 +29,37 @@ export function QuoteForm() {
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Default to 1 week from now
   );
   
-  const [items, setItems] = useState([
+  const [items, setItems] = useState<ItemType[]>([
     { id: '1', name: '', quantity: '', unit: 'kg' }
   ]);
 
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>("");
+
+  // Handle supplier selection
+  const handleSupplierChange = (supplierId: string) => {
+    setSelectedSupplierId(supplierId);
+    
+    // Find the selected supplier
+    const selectedSupplier = sampleSuppliers.find(supplier => supplier.id === supplierId);
+    
+    if (selectedSupplier && selectedSupplier.products.length > 0) {
+      // Map supplier products to items format
+      const supplierItems: ItemType[] = selectedSupplier.products.map(product => ({
+        id: product.id,
+        name: product.name,
+        quantity: '1', // Default quantity
+        unit: product.unit
+      }));
+      
+      setItems(supplierItems);
+    } else {
+      // Reset to one empty item if no products
+      setItems([{ id: '1', name: '', quantity: '', unit: 'kg' }]);
+    }
+  };
+
   const handleAddItem = () => {
-    setItems([...items, { id: String(items.length + 1), name: '', quantity: '', unit: 'kg' }]);
+    setItems([...items, { id: String(Date.now()), name: '', quantity: '', unit: 'kg' }]);
   };
 
   const handleRemoveItem = (id: string) => {
@@ -35,7 +68,7 @@ export function QuoteForm() {
     }
   };
 
-  const handleItemChange = (id: string, field: keyof typeof items[0], value: string) => {
+  const handleItemChange = (id: string, field: keyof ItemType, value: string) => {
     setItems(items.map(item => 
       item.id === id ? { ...item, [field]: value } : item
     ));
@@ -67,15 +100,20 @@ export function QuoteForm() {
             
             <div className="space-y-2">
               <Label htmlFor="supplier">Supplier</Label>
-              <Select required>
+              <Select 
+                required
+                value={selectedSupplierId}
+                onValueChange={handleSupplierChange}
+              >
                 <SelectTrigger id="supplier">
                   <SelectValue placeholder="Select supplier" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="farm-fresh">Farm Fresh Produce</SelectItem>
-                  <SelectItem value="quality-meats">Quality Meats Co.</SelectItem>
-                  <SelectItem value="dairy-best">Dairy Best Inc.</SelectItem>
-                  <SelectItem value="seafood-direct">Seafood Direct</SelectItem>
+                  {sampleSuppliers.map(supplier => (
+                    <SelectItem key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
