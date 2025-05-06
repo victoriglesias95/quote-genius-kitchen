@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { QuoteForm } from '@/components/quotes/QuoteForm';
@@ -32,10 +33,10 @@ const NewQuoteRequest = () => {
 
   // In a real app, this would come from an API or database
   // Filter requests that are in "pending" or "approved" status 
-  // and don't have quotes yet
+  // and don't have quotes yet - using optional chaining to safely access quotes property
   const chefRequests = allRequests.filter(
     req => (req.status === 'pending' || req.status === 'approved') && 
-    (!req.quotes || req.quotes.length === 0)
+    (!req.quotes?.length)
   );
 
   const handleCreateFromChefRequest = (requestId: string) => {
