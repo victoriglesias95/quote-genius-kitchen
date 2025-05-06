@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -21,7 +20,8 @@ import {
   FileText, 
   BarChart3, 
   Settings, 
-  Mail 
+  Mail,
+  LayoutGrid
 } from "lucide-react";
 
 export function AppSidebar() {
@@ -32,6 +32,7 @@ export function AppSidebar() {
     { title: "Suppliers", path: "/suppliers", icon: Users },
     { title: "Ingredients", path: "/ingredients", icon: Package },
     { title: "Quote Requests", path: "/quotes", icon: FileText },
+    { title: "Product Comparison", path: "/products/compare", icon: LayoutGrid },
     { title: "Reports", path: "/reports", icon: BarChart3 },
     { title: "Settings", path: "/settings", icon: Settings },
   ];
