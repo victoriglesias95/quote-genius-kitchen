@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 
 interface ProgressCardProps {
   countedItems: number;
@@ -20,12 +21,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ countedItems, totalItems })
               {countedItems} of {totalItems} items ({progressPercentage}%)
             </span>
           </div>
-          <div className="w-full h-2 bg-blue-100 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-blue-500 transition-all duration-300" 
-              style={{width: `${progressPercentage}%`}}
-            ></div>
-          </div>
+          <Progress value={progressPercentage} className="h-2 bg-blue-100" />
         </div>
       </CardContent>
     </Card>

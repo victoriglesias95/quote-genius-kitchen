@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -37,9 +36,10 @@ const Inventory = () => {
   const [selectedUnit, setSelectedUnit] = useState<string>('');
   const [categoryProducts, setCategoryProducts] = useState<InventoryItem[]>([]);
   
-  // Get unique categories for tabs
-  const categories = ['all', ...Array.from(new Set(inventory.map(item => item.category)))];
+  // Get unique categories from product database instead of inventory items
   const dbCategories = getUniqueCategories();
+  // Create categories array with 'all' first, followed by database categories
+  const categories = ['all', ...dbCategories];
 
   useEffect(() => {
     // When category is selected, filter products from product database by that category
