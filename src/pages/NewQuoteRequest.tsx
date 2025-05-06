@@ -49,6 +49,29 @@ const NewQuoteRequest = () => {
     }
   };
 
+  // Map API response to the Request type
+  const mapToRequest = (apiData: any): Request => {
+    return {
+      id: apiData.id,
+      title: apiData.title,
+      dueDate: new Date(apiData.due_date),
+      deliveryDate: apiData.delivery_date ? new Date(apiData.delivery_date) : undefined,
+      quoteDeadline: apiData.quote_deadline ? new Date(apiData.quote_deadline) : undefined,
+      items: apiData.request_items.map((item: any) => ({
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit
+      })),
+      category: apiData.category,
+      status: apiData.status,
+      notes: apiData.notes || "",
+      reminderSent: apiData.reminder_sent || false,
+      assignedTo: apiData.assigned_to || "",
+      createdAt: new Date(apiData.created_at),
+      updatedAt: new Date(apiData.updated_at)
+    };
+  };
+
   // Fetch specific chef request if ID is provided
   const fetchChefRequest = async (id: string) => {
     try {
@@ -59,7 +82,7 @@ const NewQuoteRequest = () => {
         .single();
       
       if (error) throw error;
-      return data;
+      return data ? mapToRequest(data) : null;
     } catch (error) {
       console.error("Error fetching chef request:", error);
       return null;

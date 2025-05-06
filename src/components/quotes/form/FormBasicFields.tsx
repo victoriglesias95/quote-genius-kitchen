@@ -56,7 +56,7 @@ export const FormBasicFields: React.FC<FormBasicFieldsProps> = ({
       <DateSelector 
         label="Required By Date"
         date={date} 
-        setDate={setDate} 
+        onDateChange={setDate} 
       />
       
       {/* Urgent flag */}
