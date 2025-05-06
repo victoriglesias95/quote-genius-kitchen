@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -337,6 +338,7 @@ const NewRequestDialog = ({ open, onOpenChange }) => {
         return {
           ...product,
           currentStock: inventoryItem?.currentStock || 'Unknown',
+          stockValue: inventoryItem?.actualCount || 'No count',
           defaultUnit: product.units[0] || 'kg'
         };
       });
@@ -351,7 +353,8 @@ const NewRequestDialog = ({ open, onOpenChange }) => {
             name: product.name,
             quantity: '',
             unit: product.defaultUnit,
-            stockStatus: product.currentStock
+            stockStatus: product.currentStock,
+            stockValue: product.stockValue
           }))
         );
       }
@@ -367,7 +370,8 @@ const NewRequestDialog = ({ open, onOpenChange }) => {
       name: '', 
       quantity: '', 
       unit: 'kg', 
-      stockStatus: '' 
+      stockStatus: '',
+      stockValue: 'No count'
     }]);
   };
   
@@ -387,6 +391,7 @@ const NewRequestDialog = ({ open, onOpenChange }) => {
             ...item, 
             [field]: value,
             stockStatus: selectedProduct?.currentStock || '',
+            stockValue: selectedProduct?.stockValue || 'No count',
             unit: selectedProduct?.defaultUnit || item.unit
           };
         }
@@ -412,18 +417,29 @@ const NewRequestDialog = ({ open, onOpenChange }) => {
       return;
     }
     
+    // Create a new request object
+    const newRequest = {
+      id: `req-${Date.now()}`,
+      title: title,
+      status: 'pending',
+      dueDate: new Date(dueDate),
+      category: category,
+      items: items.map(item => ({
+        id: item.id,
+        name: item.name,
+        quantity: parseFloat(item.quantity),
+        unit: item.unit
+      })),
+      notes: notes
+    };
+    
+    // In a real application, this would be sent to a backend API
+    // For demo purposes, we'll just show a toast and close the dialog
+    console.log("New request created:", newRequest);
+    
     toast.success("Request created successfully");
+    toast.info("The request has been sent to suppliers for quotes");
     onOpenChange(false);
-  };
-
-  // Helper function to get stock level indicator color
-  const getStockColor = (level) => {
-    switch(level?.toLowerCase()) {
-      case 'low': return 'text-red-500';
-      case 'medium': return 'text-yellow-500';
-      case 'high': return 'text-green-500';
-      default: return 'text-gray-500';
-    }
   };
 
   return (
@@ -529,20 +545,26 @@ const NewRequestDialog = ({ open, onOpenChange }) => {
                       </Select>
                     </div>
                     
+                    <div className="w-24 flex-shrink-0">
+                      <div className="mb-1 text-xs text-gray-500">In Stock</div>
+                      <div className="h-9 flex items-center border rounded px-2 bg-gray-50">
+                        <span className="text-sm">
+                          {item.stockValue || 'No count'}
+                        </span>
+                      </div>
+                    </div>
+                    
                     <Button 
                       type="button" 
                       variant="ghost" 
                       size="icon"
-                      className="h-9 w-9 flex-shrink-0"
+                      className="h-9 w-9 flex-shrink-0 mt-6"
                       onClick={() => handleRemoveItem(item.id)}
                       disabled={items.length === 1}
                     >
                       <span className="sr-only">Remove</span>
-                      {item.stockStatus && (
-                        <div className="tooltip" data-tip={`Stock: ${item.stockStatus}`}>
-                          <Info className={`h-4 w-4 ${getStockColor(item.stockStatus)}`} />
-                        </div>
-                      )}
+                      {/* Icon for remove */}
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </Button>
                   </div>
                 ))}
