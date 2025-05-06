@@ -156,6 +156,112 @@ const PurchasingAssistant = () => {
     }
   });
 
+  // Handle manually adding a new item
+  const handleAddManualItem = useCallback((item: SelectedQuoteItem) => {
+    // First store in localStorage
+    storeManuallyAddedItem(item)
+      .then(() => {
+        // Then update local state
+        setLocallyAddedItems(prev => [...prev, item]);
+        
+        // Track as manually selected
+        setManuallySelectedItems(prev => ({
+          ...prev,
+          [item.id]: true
+        }));
+        
+        // Refresh validation
+        setTimeout(() => {
+          refetchValidation();
+        }, 100);
+      })
+      .catch(error => {
+        toast.error("Failed to add manual item");
+        console.error(error);
+      });
+  }, [refetchValidation]);
+
+  // Handle updating an item's quantity
+  const handleUpdateItemQuantity = useCallback((item: SelectedQuoteItem, newQuantity: number) => {
+    // Find the item in our local state
+    const updatedItems = selectedItems.map(existingItem => {
+      if (existingItem.id === item.id) {
+        // Calculate the new total price
+        const totalPrice = existingItem.price * newQuantity;
+        
+        // Return updated item with new quantity and total price
+        return {
+          ...existingItem,
+          quantity: newQuantity,
+          totalPrice
+        };
+      }
+      return existingItem;
+    });
+    
+    // If this is a local item, update it in local state
+    if (locallyAddedItems.some(localItem => localItem.id === item.id)) {
+      const updatedLocalItems = locallyAddedItems.map(localItem => {
+        if (localItem.id === item.id) {
+          const totalPrice = localItem.price * newQuantity;
+          return {
+            ...localItem,
+            quantity: newQuantity,
+            totalPrice
+          };
+        }
+        return localItem;
+      });
+      
+      // Update localStorage with the changed item
+      const updatedItem = updatedLocalItems.find(localItem => localItem.id === item.id);
+      if (updatedItem) {
+        storeManuallyAddedItem(updatedItem)
+          .catch(error => {
+            toast.error("Failed to update item in storage");
+            console.error(error);
+          });
+      }
+      
+      // Update state
+      setLocallyAddedItems(updatedLocalItems);
+    } else {
+      // For items from the server, we'd normally send an update to the server
+      // For this demo, we'll just update locally by creating a local override
+      const updatedItem = updatedItems.find(i => i.id === item.id);
+      if (updatedItem) {
+        // Create a local version that overrides the server version
+        const localOverride: SelectedQuoteItem = {
+          ...updatedItem,
+          id: `local-override-${updatedItem.id}`,
+          isManuallySelected: true
+        };
+        
+        // Store it and add to local items
+        storeManuallyAddedItem(localOverride)
+          .then(() => {
+            // Remove the original item by filtering it out when we merge arrays
+            setLocallyAddedItems(prev => [...prev.filter(i => i.id !== `local-override-${updatedItem.id}`), localOverride]);
+            
+            // Flag it as manually selected
+            setManuallySelectedItems(prev => ({
+              ...prev,
+              [`local-override-${updatedItem.id}`]: true
+            }));
+            
+            // Refresh validation
+            setTimeout(() => {
+              refetchValidation();
+            }, 100);
+          })
+          .catch(error => {
+            toast.error("Failed to update item");
+            console.error(error);
+          });
+      }
+    }
+  }, [selectedItems, locallyAddedItems, refetchValidation]);
+  
   // Mutation for placing orders
   const placeOrderMutation = useMutation({
     mutationFn: async (items: SelectedQuoteItem[]) => {
@@ -295,6 +401,8 @@ const PurchasingAssistant = () => {
                 <SupplierOrderMapping 
                   selectedItems={selectedItems} 
                   manuallySelectedItems={manuallySelectedItems}
+                  onUpdateItemQuantity={handleUpdateItemQuantity}
+                  onAddManualItem={handleAddManualItem}
                 />
               </div>
             )}
