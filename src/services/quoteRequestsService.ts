@@ -119,7 +119,7 @@ export const fetchQuoteRequests = async (): Promise<QuoteRequest[]> => {
         id: quote.id,
         title: request.title,
         supplier: quote.supplier_name,
-        status: quote.status || request.status || 'pending',  // Use request status if quote status is not available
+        status: request.status || 'pending',  // Fix: Use request.status directly
         dueDate: new Date(request.due_date),
         fromChefRequest: true,
         chefName: request.assigned_to ? `Chef #${request.assigned_to.substring(0, 5)}` : 'Kitchen Staff',

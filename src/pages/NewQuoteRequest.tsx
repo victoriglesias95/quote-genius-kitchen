@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { QuoteForm } from '@/components/quotes/QuoteForm';
@@ -66,9 +65,7 @@ const NewQuoteRequest = () => {
       status: apiData.status,
       notes: apiData.notes || "",
       reminderSent: apiData.reminder_sent || false,
-      assignedTo: apiData.assigned_to || "",
-      createdAt: new Date(apiData.created_at),
-      updatedAt: new Date(apiData.updated_at)
+      assignedTo: apiData.assigned_to || ""
     };
   };
 
