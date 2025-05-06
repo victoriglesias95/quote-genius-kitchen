@@ -16,6 +16,17 @@ import ChefLayout from '@/components/layout/ChefLayout';
 import { Search, Filter, Clock, Plus, Check, Info } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getUniqueCategories, getProductsByCategory } from '@/data/productDatabase';
+import { InventoryItem } from '@/components/inventory/types';
+
+// Define the type for request items
+interface RequestItem {
+  id: string;
+  name: string;
+  quantity: string;
+  unit: string;
+  stockStatus: string;
+  stockValue?: string | number; // Making stockValue optional
+}
 
 // Sample request data
 const sampleRequests = [
@@ -111,7 +122,7 @@ const deliveredRequests = [
 const allRequests = [...sampleRequests, ...deliveredRequests];
 
 // Add sample inventory data for products
-const sampleInventory = [
+const sampleInventory: InventoryItem[] = [
   { id: '1', name: 'Onions', category: 'Vegetables', currentStock: 'Low', unit: 'kg', counted: false },
   { id: '2', name: 'Chicken Breast', category: 'Meat', currentStock: 'Medium', unit: 'kg', counted: false },
   { id: '3', name: 'Olive Oil', category: 'Oils', currentStock: 'High', unit: 'liter', counted: false },
@@ -304,7 +315,7 @@ const NewRequestDialog = ({ open, onOpenChange }) => {
   const [category, setCategory] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [notes, setNotes] = useState('');
-  const [items, setItems] = useState([{ id: '1', name: '', quantity: '', unit: '', stockStatus: '' }]);
+  const [items, setItems] = useState<RequestItem[]>([{ id: '1', name: '', quantity: '', unit: '', stockStatus: '' }]);
   const [categoryProducts, setCategoryProducts] = useState([]);
   
   // Get all available categories from database
@@ -338,7 +349,7 @@ const NewRequestDialog = ({ open, onOpenChange }) => {
         return {
           ...product,
           currentStock: inventoryItem?.currentStock || 'Unknown',
-          stockValue: inventoryItem?.actualCount || 'No count',
+          stockValue: inventoryItem?.actualCount !== undefined ? inventoryItem.actualCount : 'No count',
           defaultUnit: product.units[0] || 'kg'
         };
       });
@@ -549,7 +560,7 @@ const NewRequestDialog = ({ open, onOpenChange }) => {
                       <div className="mb-1 text-xs text-gray-500">In Stock</div>
                       <div className="h-9 flex items-center border rounded px-2 bg-gray-50">
                         <span className="text-sm">
-                          {item.stockValue || 'No count'}
+                          {item.stockValue !== undefined ? item.stockValue : 'No count'}
                         </span>
                       </div>
                     </div>
@@ -563,7 +574,6 @@ const NewRequestDialog = ({ open, onOpenChange }) => {
                       disabled={items.length === 1}
                     >
                       <span className="sr-only">Remove</span>
-                      {/* Icon for remove */}
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </Button>
                   </div>
