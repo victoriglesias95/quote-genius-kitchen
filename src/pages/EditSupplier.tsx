@@ -98,7 +98,7 @@ const EditSupplier = () => {
     // Filter products based on category and search query
     let filtered = productDatabase;
     
-    if (selectedCategory) {
+    if (selectedCategory && selectedCategory !== 'all_categories') {
       filtered = filtered.filter(p => p.category === selectedCategory);
     }
     
@@ -457,7 +457,7 @@ const EditSupplier = () => {
                         <SelectValue placeholder="Filter by category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Categories</SelectItem>
+                        <SelectItem value="all_categories">All Categories</SelectItem>
                         {categories.map(category => (
                           <SelectItem key={category} value={category}>{category}</SelectItem>
                         ))}
