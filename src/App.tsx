@@ -10,6 +10,7 @@ import NewQuoteRequest from "./pages/NewQuoteRequest";
 import Suppliers from "./pages/Suppliers";
 import SupplierDetail from "./pages/SupplierDetail";
 import EditSupplier from "./pages/EditSupplier";
+import SupplierProducts from "./pages/SupplierProducts";
 import ProductComparison from "./pages/ProductComparison";
 import ProductDatabasePage from "./pages/ProductDatabase";
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/suppliers" element={<Suppliers />} />
           <Route path="/suppliers/:id" element={<SupplierDetail />} />
           <Route path="/suppliers/:id/edit" element={<EditSupplier />} />
+          <Route path="/suppliers/:id/products" element={<SupplierProducts />} />
           <Route path="/suppliers/new" element={<EditSupplier />} />
           <Route path="/products/compare" element={<ProductComparison />} />
           <Route path="/products/database" element={<ProductDatabasePage />} />

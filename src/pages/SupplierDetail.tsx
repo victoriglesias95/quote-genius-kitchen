@@ -5,7 +5,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar, SidebarToggle } from '@/components/layout/Sidebar';
 import { SupplierProducts } from '@/components/suppliers/SupplierProducts';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, Package } from 'lucide-react';
+import { ArrowLeft, Edit, Package, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Supplier } from '@/components/suppliers/SupplierList';
 import { Badge } from '@/components/ui/badge';
@@ -66,10 +66,16 @@ const SupplierDetail = () => {
                 </div>
                 <p className="text-dark-gray">{supplier.category}</p>
               </div>
-              <Button onClick={() => navigate(`/suppliers/${id}/edit`)} className="gap-2">
-                <Edit className="h-4 w-4" />
-                Edit Supplier
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => navigate(`/suppliers/${id}/products`)} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Manage Products
+                </Button>
+                <Button onClick={() => navigate(`/suppliers/${id}/edit`)} variant="outline" className="gap-2">
+                  <Edit className="h-4 w-4" />
+                  Edit Supplier
+                </Button>
+              </div>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
