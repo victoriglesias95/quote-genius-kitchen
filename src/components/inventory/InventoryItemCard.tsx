@@ -26,43 +26,42 @@ const InventoryItemCard: React.FC<InventoryItemProps> = ({ item, onUpdateCount }
   };
 
   return (
-    <Card key={item.id} className={`overflow-hidden ${item.counted ? 'border-green-500 border-2' : ''}`}>
-      <div className="flex justify-between items-center p-4 border-b">
+    <Card key={item.id} className={`overflow-hidden ${item.counted ? 'border-green-500 border-2' : ''} hover:shadow-md transition-shadow`}>
+      <div className="flex justify-between items-center p-3 border-b">
         <div>
-          <h3 className="font-medium">{item.name}</h3>
-          <p className="text-sm text-gray-500">{item.category}</p>
+          <h3 className="font-medium text-base">{item.name}</h3>
+          <p className="text-xs text-gray-500">{item.category}</p>
         </div>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${stockLevelClasses[item.currentStock]}`}>
+        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${stockLevelClasses[item.currentStock]}`}>
           {item.currentStock}
         </span>
       </div>
-      <div className="p-4">
+      <div className="p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-500">Unit: {item.unit}</span>
-          <span className="text-sm font-medium">
+          <span className="text-xs text-gray-500">Unit: {item.unit}</span>
+          <span className="text-xs font-medium">
             {item.counted ? `Counted: ${item.actualCount} ${item.unit}` : 'Not counted'}
           </span>
         </div>
-        <div className="flex items-center mt-2">
+        <div className="flex items-center mt-2 gap-1">
           <Input
             type="number"
             min="0"
-            placeholder={`Enter count (${item.unit})`}
+            placeholder={`Count (${item.unit})`}
             value={item.actualCount !== null ? item.actualCount : ''}
             onChange={(e) => {
               const value = e.target.value !== '' ? parseFloat(e.target.value) : null;
               onUpdateCount(item.id, value);
             }}
-            className="flex-grow mr-2"
+            className="flex-grow h-9 text-sm"
           />
           <Button 
             variant="outline" 
-            size="sm" 
-            className={item.counted ? "bg-green-50" : ""}
+            size="sm"
+            className={`h-9 px-2 ${item.counted ? "bg-green-50 border-green-200" : ""}`}
             onClick={() => onUpdateCount(item.id, item.actualCount !== null ? item.actualCount : 0)}
           >
-            <CheckCircle className={`h-4 w-4 mr-2 ${item.counted ? "text-green-500" : "text-gray-400"}`} />
-            Count
+            <CheckCircle className={`h-4 w-4 ${item.counted ? "text-green-500" : "text-gray-400"}`} />
           </Button>
         </div>
       </div>

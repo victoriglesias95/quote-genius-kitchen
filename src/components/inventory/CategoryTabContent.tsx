@@ -32,24 +32,25 @@ const CategoryTabContent: React.FC<CategoryTabContentProps> = ({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>
+        <CardTitle className="text-xl">
           {category === 'all' ? 'All Products' : category}
         </CardTitle>
         {category !== 'all' && (
           <Button 
             variant="outline" 
             size="sm"
+            className="h-8"
             onClick={() => onEditCategory(category)}
           >
-            <Edit className="h-4 w-4 mr-2" />
-            Edit List
+            <Edit className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Edit List</span>
           </Button>
         )}
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {items.length === 0 ? (
-            <div className="col-span-full text-center p-8 text-gray-500">
+            <div className="col-span-full text-center p-6 text-gray-500">
               No inventory items found matching your search.
             </div>
           ) : (

@@ -109,3 +109,18 @@
     @apply bg-orange text-white px-4 py-2 rounded-md hover:bg-opacity-90 transition-colors;
   }
 }
+
+/* Add extra utilities for mobile responsiveness */
+@media screen and (min-width: 400px) {
+  .xs\:inline {
+    display: inline;
+  }
+  
+  .xs\:block {
+    display: block;
+  }
+  
+  .xs\:hidden {
+    display: none;
+  }
+}
