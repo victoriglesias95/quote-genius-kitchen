@@ -5,7 +5,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar, SidebarToggle } from '@/components/layout/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, FileText, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { QuoteRequestsList } from '@/components/quotes/QuoteRequestsList';
@@ -64,6 +64,14 @@ const Quotes = () => {
                   <Button onClick={() => navigate('/quotes/batch')} variant="outline" className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     <span>Batch Generator</span>
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/quotes/purchasing-assistant')} 
+                    variant="outline" 
+                    className="flex items-center gap-2 bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
+                  >
+                    <Check className="h-4 w-4" />
+                    <span>Purchasing Assistant</span>
                   </Button>
                 </div>
               )}

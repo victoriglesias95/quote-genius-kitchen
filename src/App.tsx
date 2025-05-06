@@ -22,6 +22,7 @@ import UserManagement from '@/pages/admin/UserManagement';
 import BatchQuoteGenerator from '@/pages/BatchQuoteGenerator';
 import ProductDatabase from '@/pages/ProductDatabase';
 import ProductComparison from '@/pages/ProductComparison';
+import PurchasingAssistant from '@/pages/PurchasingAssistant';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -47,6 +48,7 @@ function App() {
           <Route path="/quotes" element={<Quotes />} />
           <Route path="/quotes/new" element={<NewQuoteRequest />} />
           <Route path="/quotes/batch" element={<BatchQuoteGenerator />} />
+          <Route path="/quotes/purchasing-assistant" element={<PurchasingAssistant />} />
           
           {/* Supplier Routes */}
           <Route path="/suppliers" element={<Suppliers />} />
