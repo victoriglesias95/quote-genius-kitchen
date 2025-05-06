@@ -172,17 +172,18 @@ export const createRequest = async (request: Omit<Request, 'id'>): Promise<Reque
       throw new Error(requestError.message);
     }
 
-    // Insert request items
-    const requestItems = request.items.map(item => ({
+    // Convert string quantities to numbers
+    const sanitizedItems = request.items.map(item => ({
       request_id: newRequest.id,
       name: item.name,
-      quantity: item.quantity,
+      quantity: typeof item.quantity === 'string' ? parseFloat(item.quantity) : item.quantity,
       unit: item.unit
     }));
 
+    // Insert request items
     const { data: newItems, error: itemsError } = await supabase
       .from('request_items')
-      .insert(requestItems)
+      .insert(sanitizedItems)
       .select();
 
     if (itemsError) {
@@ -272,18 +273,19 @@ export const seedInitialData = async (requests: Request[]): Promise<void> => {
         continue;
       }
 
-      // Insert request items
-      const requestItems = request.items.map(item => ({
+      // Convert string quantities to numbers for all items
+      const sanitizedItems = request.items.map(item => ({
         id: item.id,
         request_id: newRequest.id,
         name: item.name,
-        quantity: item.quantity,
+        quantity: typeof item.quantity === 'string' ? parseFloat(item.quantity as string) : item.quantity,
         unit: item.unit
       }));
 
+      // Insert request items
       const { error: itemsError } = await supabase
         .from('request_items')
-        .insert(requestItems);
+        .insert(sanitizedItems);
 
       if (itemsError) {
         console.error('Error seeding request items:', itemsError);
