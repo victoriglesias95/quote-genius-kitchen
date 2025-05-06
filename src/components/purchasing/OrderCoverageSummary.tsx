@@ -26,7 +26,10 @@ export function OrderCoverageSummary({ selectedItems, chefRequests }: OrderCover
     // Count covered products
     const coveredProductsSet = new Set<string>();
     selectedItems.forEach(item => {
-      coveredProductsSet.add(`${item.itemName}-${item.requestId}`);
+      // Make sure we're comparing apples to apples
+      if (item && item.itemName && item.requestId) {
+        coveredProductsSet.add(`${item.itemName}-${item.requestId}`);
+      }
     });
     
     const coveredProducts = coveredProductsSet.size;
@@ -39,7 +42,9 @@ export function OrderCoverageSummary({ selectedItems, chefRequests }: OrderCover
     // Count suppliers
     const suppliersSet = new Set<string>();
     selectedItems.forEach(item => {
-      suppliersSet.add(item.supplierId);
+      if (item && item.supplierId) {
+        suppliersSet.add(item.supplierId);
+      }
     });
     
     const supplierCount = suppliersSet.size;
@@ -68,7 +73,7 @@ export function OrderCoverageSummary({ selectedItems, chefRequests }: OrderCover
             <div className="text-sm text-gray-600">Items Covered</div>
             <div className="flex items-center gap-1 text-2xl font-bold mt-1">
               {metrics.coveredProducts}
-              {metrics.coveredProducts === metrics.totalRequestedProducts && (
+              {metrics.coveredProducts === metrics.totalRequestedProducts && metrics.totalRequestedProducts > 0 && (
                 <CheckCircle className="h-5 w-5 ml-1 text-green-500" />
               )}
             </div>

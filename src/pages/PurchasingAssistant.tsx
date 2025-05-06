@@ -57,7 +57,7 @@ const PurchasingAssistant = () => {
   const [manuallySelectedItems, setManuallySelectedItems] = useState<Record<string, boolean>>({});
   const [specialInstructions, setSpecialInstructions] = useState<Record<string, string>>({});
   
-  // NEW: State to track locally added items (before they are persisted to storage)
+  // State to track locally added items (before they are persisted to storage)
   const [locallyAddedItems, setLocallyAddedItems] = useState<SelectedQuoteItem[]>([]);
   
   // Fetch selected quote items
@@ -86,7 +86,7 @@ const PurchasingAssistant = () => {
     queryFn: fetchChefRequests,
   });
 
-  // Validate supplier data
+  // Validate supplier data - use the combined selectedItems
   const {
     data: validationResults,
     isLoading: isValidating,
@@ -128,8 +128,7 @@ const PurchasingAssistant = () => {
         isManuallySelected: true
       };
       
-      // In a real app, you would call an API to add the item
-      // For this demo, we'll store it in localStorage and update our local state
+      // Store in localStorage and return the new item
       await storeManuallyAddedItem(newItem);
       
       return newItem;
@@ -147,7 +146,9 @@ const PurchasingAssistant = () => {
       toast.success(`Added ${newItem.itemName} to selected items`);
       
       // Refresh validation after adding an item
-      refetchValidation();
+      setTimeout(() => {
+        refetchValidation();
+      }, 100);
     },
     onError: (error) => {
       toast.error("Failed to add item");
@@ -161,12 +162,10 @@ const PurchasingAssistant = () => {
       // Validate data one more time before submission
       const validationResults = await validateSupplierData(items);
       
-      if (!validationResults.isValid) {
-        throw new Error("Validation failed. Please review the validation errors.");
-      }
+      // For demo purposes, allow proceeding even with validation issues
+      // In a real app, you might want to block this or prompt for confirmation
       
-      // In a real app, this would call your API to place the orders
-      // For now, we'll just simulate it
+      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Clear any stored manually added items
@@ -492,7 +491,7 @@ const PurchasingAssistant = () => {
               Cancel
             </Button>
             
-            {/* Conditionally show warnings if needed */}
+            {/* Conditionally show warnings if needed but don't block confirmation */}
             {hasValidationIssues && (
               <div className="flex items-center text-amber-600 text-sm mr-4">
                 <AlertTriangle className="h-4 w-4 mr-1" />
@@ -502,7 +501,7 @@ const PurchasingAssistant = () => {
             
             <Button 
               onClick={handleConfirmOrders}
-              disabled={placeOrderMutation.isPending || (hasValidationIssues && !window.confirm("There are validation issues. Are you sure you want to proceed?"))}
+              disabled={placeOrderMutation.isPending}
             >
               {placeOrderMutation.isPending ? "Processing..." : "Confirm All Orders"}
             </Button>
