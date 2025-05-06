@@ -16,7 +16,7 @@ export const RequestsTabContent: React.FC<RequestsTabContentProps> = ({ requests
     requests;
   
   return (
-    <div className="space-y-1">
+    <div className="space-y-4">
       {filteredRequests.length > 0 ? (
         filteredRequests.map(request => (
           <RequestCard key={request.id} request={request} />
