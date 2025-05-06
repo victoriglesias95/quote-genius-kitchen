@@ -21,7 +21,7 @@ interface RecentRequestsProps {
 }
 
 export function RecentRequests({ requests, isLoading = false }: RecentRequestsProps) {
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: 'pending' | 'received' | 'expired') => {
     switch(status) {
       case 'pending':
         return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Pending</Badge>;
