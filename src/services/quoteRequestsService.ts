@@ -238,3 +238,62 @@ export const updateQuoteStatus = async (
     throw error;
   }
 };
+
+// Fetch quote request by ID
+export const fetchQuoteRequestById = async (id: string): Promise<QuoteRequest> => {
+  try {
+    // Fetch quote with related request data
+    const { data: quote, error: quoteError } = await supabase
+      .from('quotes')
+      .select(`
+        *,
+        requests:request_id (
+          title,
+          status,
+          due_date,
+          category,
+          assigned_to
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (quoteError) {
+      console.error("Error fetching quote:", quoteError);
+      throw new Error(quoteError.message);
+    }
+
+    if (!quote) {
+      throw new Error("Quote not found");
+    }
+
+    // Get items count for this request
+    const { count: itemsCount, error: countError } = await supabase
+      .from('request_items')
+      .select('*', { count: 'exact', head: true })
+      .eq('request_id', quote.request_id);
+
+    if (countError) {
+      console.error("Error fetching request items count:", countError);
+      throw new Error(countError.message);
+    }
+
+    const request = quote.requests;
+
+    // Map database quote to QuoteRequest format
+    return {
+      id: quote.id,
+      title: request.title,
+      supplier: quote.supplier_name,
+      status: request.status || 'pending',
+      dueDate: new Date(request.due_date),
+      fromChefRequest: true,
+      chefName: request.assigned_to ? `Chef #${request.assigned_to.substring(0, 5)}` : 'Kitchen Staff',
+      items: itemsCount || 0,
+      category: request.category
+    };
+  } catch (error) {
+    console.error("Failed to fetch quote request:", error);
+    throw error;
+  }
+};

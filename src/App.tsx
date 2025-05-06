@@ -8,6 +8,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import Index from '@/pages/Index';
 import Quotes from '@/pages/Quotes';
 import NewQuoteRequest from '@/pages/NewQuoteRequest';
+import QuoteDetail from '@/pages/QuoteDetail';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import NotFound from '@/pages/NotFound';
@@ -47,6 +48,7 @@ function App() {
           {/* Quote Routes */}
           <Route path="/quotes" element={<Quotes />} />
           <Route path="/quotes/new" element={<NewQuoteRequest />} />
+          <Route path="/quotes/detail/:id" element={<QuoteDetail />} />
           <Route path="/quotes/batch" element={<BatchQuoteGenerator />} />
           <Route path="/quotes/purchasing-assistant" element={<PurchasingAssistant />} />
           
