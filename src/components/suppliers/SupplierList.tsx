@@ -8,7 +8,7 @@ export interface Product {
   id: string;
   name: string;
   category: string;
-  unit: string;
+  units: string[]; // Changed from single unit to array of units
   defaultPrice?: number;
 }
 

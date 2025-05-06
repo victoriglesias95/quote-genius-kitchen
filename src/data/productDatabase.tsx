@@ -1,8 +1,7 @@
-
 import { Product } from '@/components/suppliers/SupplierList';
 
 // This type extends the Product type to include a unique ID for the database
-export interface ProductDatabase extends Omit<Product, 'defaultPrice'> {
+export interface ProductDatabase {
   id: string;
   name: string;
   category: string;
