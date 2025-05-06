@@ -2,8 +2,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
-interface QuoteItem {
+export interface QuoteItem {
   id: string;
   name: string;
   price: number;
@@ -13,18 +14,14 @@ interface QuoteItem {
   supplierName?: string;
   validUntil?: Date;
   quoteId?: string;
+  isSelected?: boolean;
 }
 
 export function useQuoteItems() {
-  const [quoteItems, setQuoteItems] = useState<QuoteItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchQuoteItems() {
+  const { data: quoteItems, isLoading, error } = useQuery({
+    queryKey: ['quoteItems'],
+    queryFn: async () => {
       try {
-        setIsLoading(true);
-        
         // First get all valid quotes
         const { data: quotes, error: quotesError } = await supabase
           .from('quotes')
@@ -36,8 +33,7 @@ export function useQuoteItems() {
         }
 
         if (!quotes || quotes.length === 0) {
-          setQuoteItems([]);
-          return;
+          return [];
         }
 
         // Fetch quote items for these quotes
@@ -87,23 +83,34 @@ export function useQuoteItems() {
               supplierId: quote.supplier_id,
               supplierName: quote.supplier_name,
               validUntil: quote.delivery_date ? new Date(quote.delivery_date) : undefined,
-              quoteId: quote.id
+              quoteId: quote.id,
+              isSelected: false
             });
           }
         }
 
-        setQuoteItems(allItems);
+        return allItems;
       } catch (err) {
         console.error('Failed to fetch quote items:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error occurred');
-        toast.error('Failed to load quote items');
-      } finally {
-        setIsLoading(false);
+        throw err;
       }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+    refetchOnWindowFocus: false
+  });
+
+  // Effect to show toast for errors
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to load quote items');
+      console.error(error);
     }
+  }, [error]);
 
-    fetchQuoteItems();
-  }, []);
-
-  return { quoteItems, isLoading, error };
+  return { 
+    quoteItems: quoteItems || [], 
+    isLoading, 
+    error: error ? (error instanceof Error ? error.message : 'Unknown error') : null 
+  };
 }

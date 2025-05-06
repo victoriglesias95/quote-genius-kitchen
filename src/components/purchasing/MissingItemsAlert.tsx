@@ -1,25 +1,39 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { SelectedQuoteItem, findMissingItems, MissingItem } from '@/services/purchasingService';
 import { Request } from '@/components/chef/requests/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { X, CheckCircle, AlertTriangle } from 'lucide-react';
+import { X, CheckCircle, AlertTriangle, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface MissingItemsAlertProps {
   selectedItems: SelectedQuoteItem[];
   chefRequests: Request[];
+  onAddMissingItem?: (item: MissingItem, supplierId: string) => void;
 }
 
-export function MissingItemsAlert({ selectedItems, chefRequests }: MissingItemsAlertProps) {
+export function MissingItemsAlert({ 
+  selectedItems, 
+  chefRequests,
+  onAddMissingItem 
+}: MissingItemsAlertProps) {
+  // State to track which missing items have been handled
+  const [handledItems, setHandledItems] = useState<Set<string>>(new Set());
+  
   // Find items from chef requests that are missing in selected quotes
   const missingItems = useMemo(() => {
     return findMissingItems(selectedItems, chefRequests);
   }, [selectedItems, chefRequests]);
   
-  if (missingItems.length === 0) {
+  // Filtered missing items (exclude handled ones)
+  const filteredMissingItems = missingItems.filter(
+    item => !handledItems.has(`${item.name}-${item.requestId}`)
+  );
+  
+  if (missingItems.length === 0 || filteredMissingItems.length === 0) {
     return (
       <Alert className="bg-green-50 text-green-800 border-green-200">
         <CheckCircle className="h-4 w-4 text-green-600" />
@@ -39,12 +53,39 @@ export function MissingItemsAlert({ selectedItems, chefRequests }: MissingItemsA
           <CardTitle className="text-xl font-semibold text-red-700">Missing Items Alert</CardTitle>
         </div>
         <CardDescription className="text-red-600">
-          {missingItems.length} item{missingItems.length !== 1 ? 's' : ''} from chef requests {missingItems.length !== 1 ? 'are' : 'is'} not included in the current selection
+          {filteredMissingItems.length} item{filteredMissingItems.length !== 1 ? 's' : ''} from chef requests {filteredMissingItems.length !== 1 ? 'are' : 'is'} not included in the current selection
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-4 space-y-4">
-        {missingItems.map((item) => (
-          <MissingItemCard key={`${item.name}-${item.requestId}`} item={item} />
+        {filteredMissingItems.map((item) => (
+          <MissingItemCard 
+            key={`${item.name}-${item.requestId}`} 
+            item={item} 
+            onAddQuote={(supplierId) => {
+              if (onAddMissingItem) {
+                onAddMissingItem(item, supplierId);
+              }
+              
+              // Mark item as handled
+              setHandledItems(prev => {
+                const updated = new Set(prev);
+                updated.add(`${item.name}-${item.requestId}`);
+                return updated;
+              });
+              
+              toast.success(`Added ${item.name} from ${item.quotedBy.find(s => s.supplierId === supplierId)?.supplierName}`);
+            }}
+            onSkipItem={() => {
+              // Mark item as handled
+              setHandledItems(prev => {
+                const updated = new Set(prev);
+                updated.add(`${item.name}-${item.requestId}`);
+                return updated;
+              });
+              
+              toast.info(`Skipped ${item.name}`);
+            }}
+          />
         ))}
       </CardContent>
     </Card>
@@ -53,9 +94,11 @@ export function MissingItemsAlert({ selectedItems, chefRequests }: MissingItemsA
 
 interface MissingItemCardProps {
   item: MissingItem;
+  onAddQuote: (supplierId: string) => void;
+  onSkipItem: () => void;
 }
 
-function MissingItemCard({ item }: MissingItemCardProps) {
+function MissingItemCard({ item, onAddQuote, onSkipItem }: MissingItemCardProps) {
   // Find best price supplier
   const bestSupplier = React.useMemo(() => {
     return item.quotedBy.length > 0 
@@ -106,10 +149,21 @@ function MissingItemCard({ item }: MissingItemCardProps) {
         </div>
         
         <div className="mt-3 flex gap-2">
-          <Button size="sm" className="w-full">
+          <Button 
+            size="sm" 
+            className="w-full"
+            onClick={() => bestSupplier && onAddQuote(bestSupplier.supplierId)}
+          >
+            <ShoppingCart className="mr-1 h-4 w-4" />
             Add Best Quote
           </Button>
-          <Button variant="outline" size="sm" className="w-full">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full"
+            onClick={onSkipItem}
+          >
+            <X className="mr-1 h-4 w-4" />
             Skip Item
           </Button>
         </div>
