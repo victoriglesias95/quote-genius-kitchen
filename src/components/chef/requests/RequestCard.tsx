@@ -40,6 +40,7 @@ interface RequestProps {
       deliveryDate: Date;
       submittedDate: Date;
     }[];
+    selectedQuote?: string; // ID of the selected quote
   };
   canEdit?: boolean;
   canApprove?: boolean;
