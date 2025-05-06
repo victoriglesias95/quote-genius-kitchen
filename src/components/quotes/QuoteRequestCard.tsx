@@ -36,6 +36,11 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
     setShowDetails(true);
   };
 
+  const handleViewFullDetails = () => {
+    setShowDetails(false);
+    navigate(`/quotes/detail/${request.id}`);
+  };
+
   const getNextStatus = (currentStatus: string) => {
     switch(currentStatus) {
       case 'pending': return 'sent';
@@ -165,10 +170,7 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
             
             <Button 
               variant="outline" 
-              onClick={() => {
-                setShowDetails(false);
-                navigate(`/quotes/detail/${request.id}`);
-              }}
+              onClick={handleViewFullDetails}
               className="w-full sm:w-auto"
             >
               View Full Details
