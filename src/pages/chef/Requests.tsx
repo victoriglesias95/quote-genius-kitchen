@@ -9,28 +9,30 @@ import { RequestsHeader } from '@/components/chef/requests/RequestsHeader';
 import { NewRequestDialog } from '@/components/chef/requests/NewRequestDialog';
 import { RequestsTabContent } from '@/components/chef/requests/RequestsTabContent';
 import { allRequests, sampleInventory } from '@/components/chef/requests/RequestsData';
-import { RequestTabData } from '@/components/chef/requests/types';
+import { RequestTabData, Request } from '@/components/chef/requests/types';
 
 const Requests = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [isNewRequestOpen, setIsNewRequestOpen] = useState(false);
+  // Add state to track all requests including newly created ones
+  const [requests, setRequests] = useState<Request[]>(allRequests);
   
   // Filter requests based on search
-  const filteredRequests = allRequests.filter(request => {
+  const filteredRequests = requests.filter(request => {
     return request.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
            request.category.toLowerCase().includes(searchTerm.toLowerCase());
   });
   
   // Get counts by status
-  const pendingCount = allRequests.filter(r => r.status === 'pending').length;
-  const approvedCount = allRequests.filter(r => r.status === 'approved').length;
-  const completedCount = allRequests.filter(r => r.status === 'completed').length;
-  const deliveredCount = allRequests.filter(r => r.status === 'delivered').length;
+  const pendingCount = requests.filter(r => r.status === 'pending').length;
+  const approvedCount = requests.filter(r => r.status === 'approved').length;
+  const completedCount = requests.filter(r => r.status === 'completed').length;
+  const deliveredCount = requests.filter(r => r.status === 'delivered').length;
   
   // Define tabs
   const tabs: RequestTabData[] = [
-    { id: 'all', label: `All (${allRequests.length})` },
+    { id: 'all', label: `All (${requests.length})` },
     { id: 'pending', label: `Pending (${pendingCount})` },
     { id: 'approved', label: `Approved (${approvedCount})` },
     { id: 'completed', label: `Completed (${completedCount})` },
@@ -43,6 +45,13 @@ const Requests = () => {
 
   const handleCreateRequest = () => {
     setIsNewRequestOpen(true);
+  };
+
+  // Handle adding a new request
+  const handleAddRequest = (newRequest: Request) => {
+    setRequests([newRequest, ...requests]);
+    // Automatically switch to the pending tab to show the new request
+    setActiveTab('pending');
   };
 
   return (
@@ -58,6 +67,7 @@ const Requests = () => {
           open={isNewRequestOpen}
           onOpenChange={setIsNewRequestOpen}
           sampleInventory={sampleInventory}
+          onRequestCreated={handleAddRequest}
         />
         
         {/* Status tabs with carousel for better mobile experience */}

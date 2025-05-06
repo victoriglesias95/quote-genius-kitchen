@@ -11,6 +11,7 @@ import { Plus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getUniqueCategories, getProductsByCategory } from '@/data/productDatabase';
 import { InventoryItem } from '@/components/inventory/types';
+import { Request } from './types';
 
 interface RequestItem {
   id: string;
@@ -25,9 +26,15 @@ interface NewRequestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sampleInventory: InventoryItem[];
+  onRequestCreated?: (request: Request) => void;
 }
 
-export const NewRequestDialog: React.FC<NewRequestDialogProps> = ({ open, onOpenChange, sampleInventory }) => {
+export const NewRequestDialog: React.FC<NewRequestDialogProps> = ({ 
+  open, 
+  onOpenChange, 
+  sampleInventory,
+  onRequestCreated 
+}) => {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -146,7 +153,7 @@ export const NewRequestDialog: React.FC<NewRequestDialogProps> = ({ open, onOpen
     }
     
     // Create a new request object
-    const newRequest = {
+    const newRequest: Request = {
       id: `req-${Date.now()}`,
       title: title,
       status: 'pending',
@@ -163,6 +170,11 @@ export const NewRequestDialog: React.FC<NewRequestDialogProps> = ({ open, onOpen
     
     // In a real application, this would be sent to a backend API
     console.log("New request created:", newRequest);
+    
+    // Call the onRequestCreated function if provided
+    if (onRequestCreated) {
+      onRequestCreated(newRequest);
+    }
     
     toast.success("Request created successfully");
     toast.info("Request sent to purchasing department for processing");
