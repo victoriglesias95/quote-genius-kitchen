@@ -76,9 +76,48 @@ export const getProductById = (id: string): ProductDatabase | undefined => {
   return productDatabase.find(product => product.id === id);
 };
 
-// In a real application, you would have API functions here to:
-// - Synchronize with ERP (fetchProductsFromERP)
-// - Add new products to the database (addProductToDatabase)
-// - Update product details (updateProductInDatabase)
-// - etc.
+// Add a new product to the database
+export const addProductToDatabase = (name: string, category: string, unit: string): ProductDatabase => {
+  // Generate a new ID based on category prefix
+  const categoryPrefix = getCategoryPrefix(category);
+  const existingProductsInCategory = productDatabase.filter(p => p.id.startsWith(`db-${categoryPrefix}`));
+  const newProductCount = existingProductsInCategory.length + 1;
+  const newProductId = `db-${categoryPrefix}${newProductCount.toString().padStart(2, '0')}`;
+  
+  const newProduct: ProductDatabase = {
+    id: newProductId,
+    name,
+    category,
+    unit
+  };
+  
+  productDatabase.push(newProduct);
+  return newProduct;
+};
 
+// Helper function to get prefix for a category
+const getCategoryPrefix = (category: string): string => {
+  // Map categories to their ID prefixes
+  const categoryMap: {[key: string]: string} = {
+    'Fruits': '1',
+    'Vegetables': '2',
+    'Fish': '3',
+    'Shellfish': '4',
+    'Beef': '5',
+    'Poultry': '6',
+    'Pork': '7',
+    'Dairy': '8',
+    'Milk': '8',
+    'Cheese': '8',
+    'Yogurt': '8'
+  };
+  
+  // Return the mapped prefix or use '9' for any new/unmapped categories
+  return categoryMap[category] || '9';
+};
+
+// In a real application, you would have more API functions here to:
+// - Synchronize with ERP (fetchProductsFromERP)
+// - Update product details (updateProductInDatabase)
+// - Delete products (deleteProductFromDatabase)
+// - etc.
