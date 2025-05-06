@@ -1,21 +1,22 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar, SidebarToggle } from '@/components/layout/Sidebar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, PlusCircle, Check, X } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Check, X, ShoppingCart, Calendar, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sampleSuppliers } from '@/pages/Suppliers';
 import { Request, RequestItem } from '@/components/chef/requests/types';
-import { buildSupplierQuoteRequests, aggregateItems, generateSupplierQuoteRequests } from '@/services/supplierProductService';
+import { findSuppliersForProduct, buildSupplierQuoteRequests, aggregateItems, generateSupplierQuoteRequests } from '@/services/supplierProductService';
 
 const BatchQuoteGenerator = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const BatchQuoteGenerator = () => {
   const [dueDate, setDueDate] = useState<Date>(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)); // 1 week from now
   const [title, setTitle] = useState<string>('Combined Quote Request');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
   
   // Fetch all pending chef requests
   const { data: chefRequests = [], isLoading } = useQuery({
@@ -58,7 +60,7 @@ const BatchQuoteGenerator = () => {
   // Match products to suppliers
   const supplierItemsMap = buildSupplierQuoteRequests(aggregatedItems);
   
-  // Format for display
+  // Format for display and toggle supplier selection
   const supplierMatches = Array.from(supplierItemsMap.entries()).map(([supplierId, items]) => {
     const supplier = sampleSuppliers.find(s => s.id === supplierId);
     return {
@@ -68,23 +70,66 @@ const BatchQuoteGenerator = () => {
       items
     };
   });
+
+  const toggleSupplierSelection = (supplierId: string) => {
+    setSelectedSuppliers(prev => {
+      if (prev.includes(supplierId)) {
+        return prev.filter(id => id !== supplierId);
+      } else {
+        return [...prev, supplierId];
+      }
+    });
+  };
+
+  // Initially select all suppliers when matches change
+  React.useEffect(() => {
+    if (supplierMatches.length > 0) {
+      setSelectedSuppliers(supplierMatches.map(supplier => supplier.id));
+    }
+  }, [JSON.stringify(supplierMatches.map(s => s.id))]);
   
   const handleSubmit = async () => {
     if (selectedRequestIds.length === 0) {
       toast.error("Please select at least one request");
       return;
     }
+
+    if (selectedSuppliers.length === 0) {
+      toast.error("Please select at least one supplier");
+      return;
+    }
     
     setIsSubmitting(true);
     
     try {
-      // Generate quote requests for each supplier
-      const quoteIds = await generateSupplierQuoteRequests(
-        title, 
-        aggregatedItems, 
-        dueDate,
-        'Combined'
-      );
+      // Filter items for selected suppliers only
+      const filteredSupplierMap = new Map<string, RequestItem[]>();
+      
+      // Only include selected suppliers
+      selectedSuppliers.forEach(supplierId => {
+        const items = supplierItemsMap.get(supplierId);
+        if (items) {
+          filteredSupplierMap.set(supplierId, items);
+        }
+      });
+      
+      // Generate quote requests just for selected suppliers
+      const quoteIds = [];
+      
+      for (const [supplierId, items] of filteredSupplierMap.entries()) {
+        const supplier = sampleSuppliers.find(s => s.id === supplierId);
+        if (supplier) {
+          const quoteId = await createQuoteRequest(
+            title,
+            supplierId,
+            supplier.name,
+            dueDate,
+            'Combined',
+            items
+          );
+          quoteIds.push(quoteId);
+        }
+      }
       
       if (quoteIds.length > 0) {
         toast.success(`Generated ${quoteIds.length} quote requests successfully`);
@@ -156,44 +201,13 @@ const BatchQuoteGenerator = () => {
                       <Button 
                         className="w-full" 
                         onClick={handleSubmit}
-                        disabled={isSubmitting || selectedRequestIds.length === 0}
+                        disabled={isSubmitting || selectedRequestIds.length === 0 || selectedSuppliers.length === 0}
                       >
                         {isSubmitting ? 'Generating...' : 'Generate Quote Requests'}
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-                
-                {supplierMatches.length > 0 && (
-                  <Card className="mt-4">
-                    <CardHeader>
-                      <CardTitle>Supplier Matches</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {supplierMatches.map(supplier => (
-                        <div key={supplier.id} className="border rounded-md p-3">
-                          <div className="flex justify-between items-center">
-                            <h3 className="font-medium">{supplier.name}</h3>
-                            <Badge variant="outline">{supplier.itemCount} items</Badge>
-                          </div>
-                          <ul className="mt-2 text-sm text-muted-foreground">
-                            {supplier.items.slice(0, 3).map((item, idx) => (
-                              <li key={idx} className="flex justify-between">
-                                <span>{item.name}</span>
-                                <span>{item.quantity} {item.unit}</span>
-                              </li>
-                            ))}
-                            {supplier.items.length > 3 && (
-                              <li className="text-xs text-muted-foreground text-center mt-1">
-                                + {supplier.items.length - 3} more items
-                              </li>
-                            )}
-                          </ul>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
               </div>
               
               <div className="lg:col-span-2">
@@ -263,55 +277,123 @@ const BatchQuoteGenerator = () => {
                 </Card>
                 
                 {selectedRequestIds.length > 0 && (
-                  <Card className="mt-4">
-                    <CardHeader>
-                      <CardTitle>Aggregated Items</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Item</TableHead>
-                            <TableHead>Total Quantity</TableHead>
-                            <TableHead>Unit</TableHead>
-                            <TableHead>Supplier Matches</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {aggregatedItems.map((item, index) => {
-                            const matchingSuppliers = findSuppliersForProduct(item.name);
-                            
-                            return (
-                              <TableRow key={index}>
-                                <TableCell>{item.name}</TableCell>
-                                <TableCell>{item.quantity}</TableCell>
-                                <TableCell>{item.unit}</TableCell>
-                                <TableCell>
-                                  {matchingSuppliers.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1">
-                                      {matchingSuppliers.slice(0, 3).map(supplier => (
-                                        <Badge key={supplier.id} variant="outline" className="bg-blue-50 text-blue-700">
-                                          {supplier.name}
-                                        </Badge>
-                                      ))}
-                                      {matchingSuppliers.length > 3 && (
-                                        <Badge variant="outline">+{matchingSuppliers.length - 3} more</Badge>
-                                      )}
+                  <>
+                    <Card className="mt-4">
+                      <CardHeader>
+                        <CardTitle>Aggregated Items</CardTitle>
+                        <CardDescription>Combined items from all selected requests</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Item</TableHead>
+                              <TableHead>Total Quantity</TableHead>
+                              <TableHead>Unit</TableHead>
+                              <TableHead>Supplier Matches</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {aggregatedItems.map((item, index) => {
+                              const matchingSuppliers = findSuppliersForProduct(item.name);
+                              
+                              return (
+                                <TableRow key={index}>
+                                  <TableCell>{item.name}</TableCell>
+                                  <TableCell>{item.quantity}</TableCell>
+                                  <TableCell>{item.unit}</TableCell>
+                                  <TableCell>
+                                    {matchingSuppliers.length > 0 ? (
+                                      <div className="flex flex-wrap gap-1">
+                                        {matchingSuppliers.slice(0, 3).map(supplier => (
+                                          <Badge key={supplier.id} variant="outline" className="bg-blue-50 text-blue-700">
+                                            {supplier.name}
+                                          </Badge>
+                                        ))}
+                                        {matchingSuppliers.length > 3 && (
+                                          <Badge variant="outline">+{matchingSuppliers.length - 3} more</Badge>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center text-red-500">
+                                        <X className="h-4 w-4 mr-1" />
+                                        <span>No matching suppliers</span>
+                                      </div>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="mt-4">
+                      <CardHeader>
+                        <CardTitle>Supplier Quote Requests</CardTitle>
+                        <CardDescription>Select which suppliers to generate quote requests for</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {supplierMatches.length === 0 ? (
+                          <div className="text-center p-4 flex flex-col items-center">
+                            <AlertTriangle className="h-12 w-12 text-amber-500 mb-2" />
+                            <p className="text-lg font-medium">No matching suppliers found</p>
+                            <p className="text-sm text-muted-foreground">None of the selected items match any supplier's product list</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {supplierMatches.map(supplier => (
+                              <Card key={supplier.id} className={`border-2 ${selectedSuppliers.includes(supplier.id) ? 'border-blue-500' : 'border-gray-200'}`}>
+                                <CardContent className="p-4">
+                                  <div className="flex justify-between items-start">
+                                    <div className="flex items-center gap-3">
+                                      <Checkbox 
+                                        checked={selectedSuppliers.includes(supplier.id)} 
+                                        onCheckedChange={() => toggleSupplierSelection(supplier.id)}
+                                        id={`supplier-${supplier.id}`}
+                                      />
+                                      <div>
+                                        <label htmlFor={`supplier-${supplier.id}`} className="text-lg font-medium cursor-pointer">{supplier.name}</label>
+                                        <div className="flex items-center text-sm text-muted-foreground gap-2">
+                                          <ShoppingCart className="h-4 w-4" />
+                                          <span>{supplier.itemCount} products</span>
+                                          <Calendar className="h-4 w-4 ml-2" />
+                                          <span>Due: {dueDate.toLocaleDateString()}</span>
+                                        </div>
+                                      </div>
                                     </div>
-                                  ) : (
-                                    <div className="flex items-center text-red-500">
-                                      <X className="h-4 w-4 mr-1" />
-                                      <span>No matching suppliers</span>
-                                    </div>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                  </Card>
+                                    <Badge>{supplier.itemCount} items</Badge>
+                                  </div>
+                                  
+                                  <div className="mt-4 max-h-40 overflow-y-auto border rounded-md">
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead>Product</TableHead>
+                                          <TableHead>Quantity</TableHead>
+                                          <TableHead>Unit</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {supplier.items.map((item, idx) => (
+                                          <TableRow key={idx}>
+                                            <TableCell>{item.name}</TableCell>
+                                            <TableCell>{item.quantity}</TableCell>
+                                            <TableCell>{item.unit}</TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </>
                 )}
               </div>
             </div>
@@ -321,13 +403,5 @@ const BatchQuoteGenerator = () => {
     </SidebarProvider>
   );
 };
-
-function findSuppliersForProduct(productName: string) {
-  return sampleSuppliers.filter(supplier => 
-    supplier.products.some(product => 
-      product.name.toLowerCase() === productName.toLowerCase()
-    )
-  );
-}
 
 export default BatchQuoteGenerator;
