@@ -15,7 +15,7 @@ interface Request {
 }
 
 interface RecentRequestsProps {
-  requests: Request[];
+  requests: ReadonlyArray<Request> | Array<Request>;
 }
 
 export function RecentRequests({ requests }: RecentRequestsProps) {
