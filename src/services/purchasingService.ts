@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Request, RequestItem } from "@/components/chef/requests/types";
+import { sampleSuppliers } from "@/pages/Suppliers";
 
 export interface SelectedQuoteItem {
   id: string;
@@ -15,6 +16,7 @@ export interface SelectedQuoteItem {
   requestId: string;
   requestTitle: string;
   isOptional: boolean;
+  isManuallySelected?: boolean;
 }
 
 export interface SupplierGroup {
@@ -37,6 +39,11 @@ export interface MissingItem {
     supplierName: string;
     price: number;
   }>;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  issues: string[];
 }
 
 // Fetch selected quote items (in a real app, these would be stored in the database)
@@ -62,7 +69,8 @@ export const fetchSelectedQuoteItems = async (): Promise<SelectedQuoteItem[]> =>
         totalPrice: 50.00,
         requestId: "req-1",
         requestTitle: "Weekly Produce",
-        isOptional: false
+        isOptional: false,
+        isManuallySelected: false
       },
       {
         id: "item-2",
@@ -75,7 +83,8 @@ export const fetchSelectedQuoteItems = async (): Promise<SelectedQuoteItem[]> =>
         totalPrice: 18.00,
         requestId: "req-1",
         requestTitle: "Weekly Produce",
-        isOptional: false
+        isOptional: false,
+        isManuallySelected: false
       },
       {
         id: "item-3",
@@ -88,7 +97,8 @@ export const fetchSelectedQuoteItems = async (): Promise<SelectedQuoteItem[]> =>
         totalPrice: 127.50,
         requestId: "req-2",
         requestTitle: "Weekly Meat Order",
-        isOptional: false
+        isOptional: false,
+        isManuallySelected: false
       },
       {
         id: "item-4",
@@ -101,7 +111,8 @@ export const fetchSelectedQuoteItems = async (): Promise<SelectedQuoteItem[]> =>
         totalPrice: 120.00,
         requestId: "req-2",
         requestTitle: "Weekly Meat Order",
-        isOptional: false
+        isOptional: false,
+        isManuallySelected: false
       },
       {
         id: "item-5",
@@ -114,7 +125,8 @@ export const fetchSelectedQuoteItems = async (): Promise<SelectedQuoteItem[]> =>
         totalPrice: 250.00,
         requestId: "req-3",
         requestTitle: "Specialty Ingredients",
-        isOptional: true
+        isOptional: true,
+        isManuallySelected: true
       },
       {
         id: "item-6",
@@ -127,7 +139,8 @@ export const fetchSelectedQuoteItems = async (): Promise<SelectedQuoteItem[]> =>
         totalPrice: 16.00,
         requestId: "req-3",
         requestTitle: "Specialty Ingredients",
-        isOptional: false
+        isOptional: false,
+        isManuallySelected: false
       }
     ];
   } catch (error) {
@@ -248,17 +261,33 @@ export const findMissingItems = (
       
       if (!selectedItemsMap.has(key)) {
         // This item is missing from the selected quotes
+        
+        // In a real app, you would fetch available quotes from your database
+        // For now, we'll simulate some data
+        const quotesBySupplier = [];
+        
+        // Check if any supplier offers this product
+        for (const supplier of sampleSuppliers) {
+          const matchingProduct = supplier.products.find(p => 
+            p.name.toLowerCase() === item.name.toLowerCase()
+          );
+          
+          if (matchingProduct) {
+            quotesBySupplier.push({
+              supplierId: supplier.id,
+              supplierName: supplier.name,
+              price: matchingProduct.defaultPrice || Math.random() * 10 + 1 // Random price if none available
+            });
+          }
+        }
+        
         missingItems.push({
           name: item.name,
           quantity: typeof item.quantity === 'string' ? parseFloat(item.quantity) : item.quantity,
           unit: item.unit,
           requestId: request.id,
           requestTitle: request.title,
-          // In a real app, you would fetch this from your database of quotes
-          quotedBy: [
-            { supplierId: 'supplier-1', supplierName: 'Farm Fresh Produce', price: 2.20 },
-            { supplierId: 'supplier-3', supplierName: 'Gourmet Suppliers', price: 2.50 }
-          ]
+          quotedBy: quotesBySupplier
         });
       }
     });
@@ -290,4 +319,58 @@ export const suggestOrderOptimization = (
   });
   
   return suggestions;
+};
+
+// Validate supplier data before order submission
+export const validateSupplierData = async (
+  selectedItems: SelectedQuoteItem[]
+): Promise<ValidationResult> => {
+  const issues: string[] = [];
+  
+  // In a real app, these checks would query your database
+  // For now, we'll simulate some validation issues
+  
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 600));
+  
+  // Group items by supplier
+  const supplierGroups = groupItemsBySupplier(selectedItems);
+  
+  // Check each supplier group
+  for (const group of supplierGroups) {
+    // 1. Check supplier active status (simulated)
+    if (group.supplierId === 'supplier-3') {
+      issues.push(`${group.supplierName} has an incomplete supplier profile. Missing contact information.`);
+    }
+    
+    // 2. Check for expired quotes (simulated)
+    if (group.supplierId === 'supplier-4') {
+      issues.push(`${group.supplierName} has quotes that will expire in 24 hours. Verify availability.`);
+    }
+    
+    // 3. Check if products are still in supplier's catalog (simulated)
+    const productsNotInCatalog = group.items.filter(item => 
+      item.itemName === 'Black Pepper' && group.supplierId === 'supplier-4'
+    );
+    
+    if (productsNotInCatalog.length > 0) {
+      issues.push(`${productsNotInCatalog[0].itemName} may no longer be available from ${group.supplierName}.`);
+    }
+    
+    // 4. Check for potential stock issues (simulated)
+    if (group.supplierId === 'supplier-2' && group.items.some(item => item.itemName === 'Chicken Breast')) {
+      issues.push(`${group.supplierName} reported limited stock for Chicken Breast. Verify availability.`);
+    }
+  }
+  
+  // Check for small orders that could be consolidated
+  const smallOrders = supplierGroups.filter(g => g.isSmallOrder);
+  if (smallOrders.length > 0) {
+    issues.push(`Consider consolidating small orders from ${smallOrders.map(g => g.supplierName).join(', ')}.`);
+  }
+  
+  return {
+    isValid: issues.length === 0,
+    issues
+  };
 };

@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Product } from '@/components/suppliers/SupplierList';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ProductWithSuppliers extends Product {
   suppliers: Array<{ 
@@ -18,9 +20,10 @@ interface ProductWithSuppliers extends Product {
 
 interface ProductComparisonTableProps {
   products: ProductWithSuppliers[];
+  onAddToCart?: (product: ProductWithSuppliers, supplierId: string) => void;
 }
 
-export function ProductComparisonTable({ products }: ProductComparisonTableProps) {
+export function ProductComparisonTable({ products, onAddToCart }: ProductComparisonTableProps) {
   // State to track selected suppliers for each product
   const [selectedSuppliers, setSelectedSuppliers] = useState<Record<string, string>>({});
   
@@ -58,6 +61,26 @@ export function ProductComparisonTable({ products }: ProductComparisonTableProps
     }
   };
 
+  // Handle adding product to cart
+  const handleAddToCart = (productId: string) => {
+    const supplierId = selectedSuppliers[productId];
+    if (!supplierId) return;
+    
+    const product = products.find(p => p.id === productId);
+    if (product && onAddToCart) {
+      onAddToCart(product, supplierId);
+    } else {
+      const supplier = product?.suppliers.find(s => s.supplierId === supplierId);
+      toast.success(`Added ${product?.name} from ${supplier?.supplierName} to cart`);
+    }
+  };
+
+  // Check if selected supplier is not the best price
+  const isNotBestPrice = (product: ProductWithSuppliers, selectedSupplierId: string): boolean => {
+    const bestSupplier = getBestPriceSupplier(product.suppliers);
+    return !!bestSupplier && bestSupplier.supplierId !== selectedSupplierId;
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -76,6 +99,8 @@ export function ProductComparisonTable({ products }: ProductComparisonTableProps
             const bestPriceSupplier = getBestPriceSupplier(product.suppliers);
             const currentSelectedSupplier = selectedSuppliers[product.id] || 
               (bestPriceSupplier ? bestPriceSupplier.supplierId : '');
+            
+            const notBestPrice = isNotBestPrice(product, currentSelectedSupplier);
             
             return (
               <TableRow key={product.id}>
@@ -120,22 +145,37 @@ export function ProductComparisonTable({ products }: ProductComparisonTableProps
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <button 
-                    className={`inline-flex items-center justify-center rounded-md p-2 transition-colors ${
-                      currentSelectedSupplier 
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                        : 'bg-gray-100 text-gray-400'
-                    }`}
-                    disabled={!currentSelectedSupplier}
-                    onClick={() => {
-                      if (currentSelectedSupplier) {
-                        const supplier = product.suppliers.find(s => s.supplierId === currentSelectedSupplier);
-                        toast.success(`Added ${product.name} from ${supplier?.supplierName} to cart`);
-                      }
-                    }}
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center justify-end">
+                    {notBestPrice && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="mr-2">
+                            <AlertTriangle className="h-4 w-4 text-amber-500" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Not the lowest price option</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    
+                    <Button 
+                      size="sm"
+                      variant="outline"
+                      className={`inline-flex items-center justify-center rounded-md transition-colors ${
+                        currentSelectedSupplier 
+                          ? notBestPrice 
+                            ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200'
+                            : 'bg-green-50 text-green-700 hover:bg-green-100 border-green-200'
+                          : 'bg-gray-100 text-gray-400'
+                      }`}
+                      disabled={!currentSelectedSupplier}
+                      onClick={() => handleAddToCart(product.id)}
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                      <span className="ml-1">Add</span>
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             );

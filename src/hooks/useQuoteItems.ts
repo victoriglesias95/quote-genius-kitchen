@@ -15,10 +15,11 @@ export interface QuoteItem {
   validUntil?: Date;
   quoteId?: string;
   isSelected?: boolean;
+  isLowestPrice?: boolean;
 }
 
 export function useQuoteItems() {
-  const { data: quoteItems, isLoading, error } = useQuery({
+  const { data: quoteItems, isLoading, error, refetch } = useQuery({
     queryKey: ['quoteItems'],
     queryFn: async () => {
       try {
@@ -84,10 +85,37 @@ export function useQuoteItems() {
               supplierName: quote.supplier_name,
               validUntil: quote.delivery_date ? new Date(quote.delivery_date) : undefined,
               quoteId: quote.id,
-              isSelected: false
+              isSelected: false,
+              isLowestPrice: false
             });
           }
         }
+
+        // Mark lowest price items for each product name
+        const productGroups = new Map<string, QuoteItem[]>();
+        
+        // Group by product name
+        allItems.forEach(item => {
+          const key = item.name.toLowerCase();
+          if (!productGroups.has(key)) {
+            productGroups.set(key, []);
+          }
+          productGroups.get(key)?.push(item);
+        });
+        
+        // For each product group, mark the lowest price item
+        productGroups.forEach(group => {
+          if (group.length > 0) {
+            const lowestPriceItem = group.reduce((lowest, current) => 
+              current.price < lowest.price ? current : lowest
+            , group[0]);
+            
+            const lowestIndex = allItems.findIndex(item => item.id === lowestPriceItem.id);
+            if (lowestIndex >= 0) {
+              allItems[lowestIndex].isLowestPrice = true;
+            }
+          }
+        });
 
         return allItems;
       } catch (err) {
@@ -111,6 +139,7 @@ export function useQuoteItems() {
   return { 
     quoteItems: quoteItems || [], 
     isLoading, 
-    error: error ? (error instanceof Error ? error.message : 'Unknown error') : null 
+    error: error ? (error instanceof Error ? error.message : 'Unknown error') : null,
+    refetch 
   };
 }
