@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -49,8 +48,7 @@ const AddUnitForm: React.FC<AddUnitFormProps> = ({ product, onSuccess, onClose }
     const updatedProduct = addUnitToProduct(product.id, data.unit);
     
     if (updatedProduct) {
-      toast({
-        title: "Unit Added",
+      toast.success("Unit Added", {
         description: `${data.unit} has been added to ${updatedProduct.name}.`,
       });
       

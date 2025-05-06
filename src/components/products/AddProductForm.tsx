@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -49,8 +48,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onSuccess, onClose }) =
   const onSubmit = (data: ProductFormValues) => {
     addProductToDatabase(data.name, data.category, data.units);
     
-    toast({
-      title: "Product Added",
+    toast.success("Product Added", {
       description: `${data.name} has been added to the product database.`,
     });
     
