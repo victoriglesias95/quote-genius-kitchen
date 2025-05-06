@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import NewQuoteRequest from "./pages/NewQuoteRequest";
 import Suppliers from "./pages/Suppliers";
 import SupplierDetail from "./pages/SupplierDetail";
+import EditSupplier from "./pages/EditSupplier";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,8 @@ const App = () => (
           <Route path="/quotes/new" element={<NewQuoteRequest />} />
           <Route path="/suppliers" element={<Suppliers />} />
           <Route path="/suppliers/:id" element={<SupplierDetail />} />
+          <Route path="/suppliers/:id/edit" element={<EditSupplier />} />
+          <Route path="/suppliers/new" element={<EditSupplier />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
