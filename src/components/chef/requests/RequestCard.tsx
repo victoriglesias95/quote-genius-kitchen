@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -8,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Check, Clock, Truck, AlertTriangle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { updateRequestStatus } from '@/services/requestsService';
 
 interface RequestItem {
   id: string;
@@ -45,15 +45,18 @@ interface RequestProps {
   canEdit?: boolean;
   canApprove?: boolean;
   canReceive?: boolean;
+  onStatusChange?: (newStatus: string) => void;
 }
 
 export const RequestCard: React.FC<RequestProps> = ({ 
   request, 
   canEdit = false, 
   canApprove = false,
-  canReceive = false 
+  canReceive = false,
+  onStatusChange
 }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -82,20 +85,50 @@ export const RequestCard: React.FC<RequestProps> = ({
     setShowDetails(true);
   };
 
-  const handleMarkAsDelivered = () => {
-    toast.success(`Marked ${request.title} as delivered`);
-    setShowDetails(false);
+  const handleMarkAsDelivered = async () => {
+    try {
+      setIsUpdating(true);
+      await updateRequestStatus(request.id, 'delivered');
+      toast.success(`Marked ${request.title} as delivered`);
+      if (onStatusChange) onStatusChange();
+      setShowDetails(false);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Failed to update request status');
+    } finally {
+      setIsUpdating(false);
+    }
   };
   
-  const handleApproveRequest = () => {
-    toast.success(`Approved ${request.title}`);
-    toast.info(`Request sent to suppliers for quotes`);
-    setShowDetails(false);
+  const handleApproveRequest = async () => {
+    try {
+      setIsUpdating(true);
+      await updateRequestStatus(request.id, 'approved');
+      toast.success(`Approved ${request.title}`);
+      toast.info(`Request sent to suppliers for quotes`);
+      if (onStatusChange) onStatusChange();
+      setShowDetails(false);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Failed to update request status');
+    } finally {
+      setIsUpdating(false);
+    }
   };
   
-  const handleRejectRequest = () => {
-    toast.error(`Rejected ${request.title}`);
-    setShowDetails(false);
+  const handleRejectRequest = async () => {
+    try {
+      setIsUpdating(true);
+      await updateRequestStatus(request.id, 'rejected');
+      toast.error(`Rejected ${request.title}`);
+      if (onStatusChange) onStatusChange();
+      setShowDetails(false);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Failed to update request status');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   // Format delivery info
@@ -276,15 +309,17 @@ export const RequestCard: React.FC<RequestProps> = ({
                   size="sm"
                   onClick={handleRejectRequest}
                   className="w-full"
+                  disabled={isUpdating}
                 >
-                  Reject
+                  {isUpdating ? "Processing..." : "Reject"}
                 </Button>
                 <Button 
                   size="sm"
                   onClick={handleApproveRequest}
                   className="w-full"
+                  disabled={isUpdating}
                 >
-                  Approve & Request Quotes
+                  {isUpdating ? "Processing..." : "Approve & Request Quotes"}
                 </Button>
               </div>
             )}
@@ -295,8 +330,9 @@ export const RequestCard: React.FC<RequestProps> = ({
                 size="sm"
                 onClick={handleMarkAsDelivered}
                 className="w-full sm:w-auto"
+                disabled={isUpdating}
               >
-                Mark as Received
+                {isUpdating ? "Processing..." : "Mark as Received"}
               </Button>
             )}
             
@@ -306,6 +342,7 @@ export const RequestCard: React.FC<RequestProps> = ({
               size="sm"
               onClick={() => setShowDetails(false)}
               className="w-full sm:w-auto"
+              disabled={isUpdating}
             >
               Close
             </Button>

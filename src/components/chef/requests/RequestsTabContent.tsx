@@ -9,9 +9,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 interface RequestsTabContentProps {
   requests: Request[];
   status?: string;
+  onStatusChange?: () => void;
 }
 
-export const RequestsTabContent: React.FC<RequestsTabContentProps> = ({ requests, status }) => {
+export const RequestsTabContent: React.FC<RequestsTabContentProps> = ({ requests, status, onStatusChange }) => {
   const { user, hasPermission } = useAuth();
   
   // Filter by status if provided
@@ -37,6 +38,7 @@ export const RequestsTabContent: React.FC<RequestsTabContentProps> = ({ requests
                 canEdit={user?.role === 'chef' || user?.role === 'purchasing'}
                 canApprove={hasPermission('canApproveRequest')}
                 canReceive={hasPermission('canReceiveOrder')}
+                onStatusChange={onStatusChange}
               />
             ))}
           </div>

@@ -9,7 +9,172 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      quote_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          notes: string | null
+          price: number
+          quantity: number
+          quote_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          notes?: string | null
+          price: number
+          quantity: number
+          quote_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          notes?: string | null
+          price?: number
+          quantity?: number
+          quote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "request_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          created_at: string
+          delivery_date: string | null
+          id: string
+          request_id: string
+          submitted_date: string
+          supplier_id: string
+          supplier_name: string
+          total_price: number
+        }
+        Insert: {
+          created_at?: string
+          delivery_date?: string | null
+          id?: string
+          request_id: string
+          submitted_date?: string
+          supplier_id: string
+          supplier_name: string
+          total_price: number
+        }
+        Update: {
+          created_at?: string
+          delivery_date?: string | null
+          id?: string
+          request_id?: string
+          submitted_date?: string
+          supplier_id?: string
+          supplier_name?: string
+          total_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_items: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          quantity: number
+          request_id: string
+          unit: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          quantity: number
+          request_id: string
+          unit: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          quantity?: number
+          request_id?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_items_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requests: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string
+          delivery_date: string | null
+          due_date: string
+          id: string
+          notes: string | null
+          quote_deadline: string | null
+          reminder_sent: boolean | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category: string
+          created_at?: string
+          delivery_date?: string | null
+          due_date: string
+          id?: string
+          notes?: string | null
+          quote_deadline?: string | null
+          reminder_sent?: boolean | null
+          status: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          delivery_date?: string | null
+          due_date?: string
+          id?: string
+          notes?: string | null
+          quote_deadline?: string | null
+          reminder_sent?: boolean | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

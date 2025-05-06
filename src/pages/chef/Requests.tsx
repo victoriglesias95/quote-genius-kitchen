@@ -1,22 +1,46 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ChefLayout from '@/components/layout/ChefLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
 // Import refactored components
 import { RequestsHeader } from '@/components/chef/requests/RequestsHeader';
 import { NewRequestDialog } from '@/components/chef/requests/NewRequestDialog';
 import { RequestsTabContent } from '@/components/chef/requests/RequestsTabContent';
-import { allRequests, sampleInventory } from '@/components/chef/requests/RequestsData';
+import { sampleInventory } from '@/components/chef/requests/RequestsData';
 import { RequestTabData, Request } from '@/components/chef/requests/types';
+import { fetchAllRequests, createRequest, seedInitialData } from '@/services/requestsService';
+import { allRequests as staticRequests } from '@/components/chef/requests/RequestsData'; // For seeding
 
 const Requests = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [isNewRequestOpen, setIsNewRequestOpen] = useState(false);
-  // Add state to track all requests including newly created ones
-  const [requests, setRequests] = useState<Request[]>(allRequests);
+  
+  // Use React Query to fetch requests data from Supabase
+  const { data: requests = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['requests'],
+    queryFn: fetchAllRequests,
+  });
+
+  // Seed initial data if needed
+  useEffect(() => {
+    const runSeedData = async () => {
+      try {
+        await seedInitialData(staticRequests);
+        // After seeding, refetch to get the latest data
+        refetch();
+      } catch (error) {
+        console.error("Error seeding data:", error);
+        toast.error("Failed to load initial data");
+      }
+    };
+
+    runSeedData();
+  }, [refetch]);
   
   // Filter requests based on search
   const filteredRequests = requests.filter(request => {
@@ -48,11 +72,40 @@ const Requests = () => {
   };
 
   // Handle adding a new request
-  const handleAddRequest = (newRequest: Request) => {
-    setRequests([newRequest, ...requests]);
-    // Automatically switch to the pending tab to show the new request
-    setActiveTab('pending');
+  const handleAddRequest = async (newRequest: Request) => {
+    try {
+      // Create request in database
+      await createRequest(newRequest);
+      // Refetch to get the updated list including the new request
+      refetch();
+      // Automatically switch to the pending tab to show the new request
+      setActiveTab('pending');
+      toast.success("Request created successfully");
+    } catch (error) {
+      console.error("Error creating request:", error);
+      toast.error("Failed to create request");
+    }
   };
+
+  if (isLoading) {
+    return (
+      <ChefLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
+      </ChefLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <ChefLayout>
+        <div className="text-center text-red-500 p-4">
+          Failed to load requests. Please try again later.
+        </div>
+      </ChefLayout>
+    );
+  }
 
   return (
     <ChefLayout>
@@ -94,23 +147,42 @@ const Requests = () => {
           {/* Tab content */}
           <div className="mt-4">
             <TabsContent value="all" className="m-0">
-              <RequestsTabContent requests={filteredRequests} />
+              <RequestsTabContent 
+                requests={filteredRequests} 
+                onStatusChange={refetch} 
+              />
             </TabsContent>
             
             <TabsContent value="pending" className="m-0">
-              <RequestsTabContent requests={filteredRequests} status="pending" />
+              <RequestsTabContent 
+                requests={filteredRequests} 
+                status="pending" 
+                onStatusChange={refetch} 
+              />
             </TabsContent>
             
             <TabsContent value="approved" className="m-0">
-              <RequestsTabContent requests={filteredRequests} status="approved" />
+              <RequestsTabContent 
+                requests={filteredRequests} 
+                status="approved" 
+                onStatusChange={refetch} 
+              />
             </TabsContent>
             
             <TabsContent value="completed" className="m-0">
-              <RequestsTabContent requests={filteredRequests} status="completed" />
+              <RequestsTabContent 
+                requests={filteredRequests} 
+                status="completed" 
+                onStatusChange={refetch} 
+              />
             </TabsContent>
             
             <TabsContent value="delivered" className="m-0">
-              <RequestsTabContent requests={filteredRequests} status="delivered" />
+              <RequestsTabContent 
+                requests={filteredRequests} 
+                status="delivered" 
+                onStatusChange={refetch} 
+              />
             </TabsContent>
           </div>
         </Tabs>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -165,19 +164,15 @@ export const NewRequestDialog: React.FC<NewRequestDialogProps> = ({
         quantity: parseFloat(item.quantity),
         unit: item.unit
       })),
-      notes: notes
+      notes: notes,
+      quotes: [] // Initialize with empty quotes array
     };
-    
-    // In a real application, this would be sent to a backend API
-    console.log("New request created:", newRequest);
     
     // Call the onRequestCreated function if provided
     if (onRequestCreated) {
       onRequestCreated(newRequest);
     }
     
-    toast.success("Request created successfully");
-    toast.info("Request sent to purchasing department for processing");
     onOpenChange(false);
   };
 
@@ -343,4 +338,3 @@ export const NewRequestDialog: React.FC<NewRequestDialogProps> = ({
     </Dialog>
   );
 };
-
