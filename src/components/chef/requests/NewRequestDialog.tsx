@@ -151,9 +151,8 @@ export const NewRequestDialog: React.FC<NewRequestDialogProps> = ({
       return;
     }
     
-    // Create a new request object
-    const newRequest: Request = {
-      id: `req-${Date.now()}`,
+    // Create a new request object - removing the manually set ID
+    const newRequest: Omit<Request, 'id'> = {
       title: title,
       status: 'pending',
       dueDate: new Date(dueDate),
@@ -170,7 +169,7 @@ export const NewRequestDialog: React.FC<NewRequestDialogProps> = ({
     
     // Call the onRequestCreated function if provided
     if (onRequestCreated) {
-      onRequestCreated(newRequest);
+      onRequestCreated(newRequest as Request); // Type assertion since ID will be added by the server
     }
     
     onOpenChange(false);

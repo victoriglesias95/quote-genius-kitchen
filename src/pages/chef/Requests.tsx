@@ -149,7 +149,7 @@ const Requests = () => {
             <TabsContent value="all" className="m-0">
               <RequestsTabContent 
                 requests={filteredRequests} 
-                onStatusChange={refetch} 
+                onStatusChange={() => refetch()} 
               />
             </TabsContent>
             
@@ -157,7 +157,7 @@ const Requests = () => {
               <RequestsTabContent 
                 requests={filteredRequests} 
                 status="pending" 
-                onStatusChange={refetch} 
+                onStatusChange={() => refetch()} 
               />
             </TabsContent>
             
@@ -165,7 +165,7 @@ const Requests = () => {
               <RequestsTabContent 
                 requests={filteredRequests} 
                 status="approved" 
-                onStatusChange={refetch} 
+                onStatusChange={() => refetch()} 
               />
             </TabsContent>
             
@@ -173,7 +173,7 @@ const Requests = () => {
               <RequestsTabContent 
                 requests={filteredRequests} 
                 status="completed" 
-                onStatusChange={refetch} 
+                onStatusChange={() => refetch()} 
               />
             </TabsContent>
             
@@ -181,7 +181,7 @@ const Requests = () => {
               <RequestsTabContent 
                 requests={filteredRequests} 
                 status="delivered" 
-                onStatusChange={refetch} 
+                onStatusChange={() => refetch()} 
               />
             </TabsContent>
           </div>

@@ -150,7 +150,7 @@ export const fetchAllRequests = async (): Promise<Request[]> => {
 // Create a new request
 export const createRequest = async (request: Omit<Request, 'id'>): Promise<Request> => {
   try {
-    // Insert request
+    // Insert request - don't specify an ID, let Supabase generate it
     const { data: newRequest, error: requestError } = await supabase
       .from('requests')
       .insert({
