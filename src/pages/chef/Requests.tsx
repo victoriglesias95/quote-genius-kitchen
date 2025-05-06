@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import ChefLayout from '@/components/layout/ChefLayout';
-import { Search, Filter, Clock, Plus, Check } from 'lucide-react';
+import { Search, Filter, Clock, Plus, Check, Info } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getUniqueCategories, getProductsByCategory } from '@/data/productDatabase';
 
 // Sample request data
 const sampleRequests = [
@@ -106,6 +108,20 @@ const deliveredRequests = [
 
 // Combine all requests
 const allRequests = [...sampleRequests, ...deliveredRequests];
+
+// Add sample inventory data for products
+const sampleInventory = [
+  { id: '1', name: 'Onions', category: 'Vegetables', currentStock: 'Low', unit: 'kg', counted: false },
+  { id: '2', name: 'Chicken Breast', category: 'Meat', currentStock: 'Medium', unit: 'kg', counted: false },
+  { id: '3', name: 'Olive Oil', category: 'Oils', currentStock: 'High', unit: 'liter', counted: false },
+  { id: '4', name: 'Salt', category: 'Spices', currentStock: 'Medium', unit: 'kg', counted: false },
+  { id: '5', name: 'Flour', category: 'Dry Goods', currentStock: 'Low', unit: 'kg', counted: false },
+  { id: '6', name: 'Eggs', category: 'Dairy', currentStock: 'Low', unit: 'dozen', counted: false },
+  { id: '7', name: 'Bell Peppers', category: 'Vegetables', currentStock: 'Medium', unit: 'kg', counted: false },
+  { id: '8', name: 'Beef Sirloin', category: 'Beef', currentStock: 'Low', unit: 'kg', counted: false },
+  { id: '9', name: 'Sugar', category: 'Dry Goods', currentStock: 'Medium', unit: 'kg', counted: false },
+  { id: '10', name: 'Butter', category: 'Dairy', currentStock: 'Low', unit: 'kg', counted: false },
+];
 
 const RequestCard = ({ request }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -283,10 +299,131 @@ const RequestsHeader = ({ searchTerm, onSearchChange, onCreateRequest }) => {
 };
 
 const NewRequestDialog = ({ open, onOpenChange }) => {
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [notes, setNotes] = useState('');
+  const [items, setItems] = useState([{ id: '1', name: '', quantity: '', unit: '', stockStatus: '' }]);
+  const [categoryProducts, setCategoryProducts] = useState([]);
+  
+  // Get all available categories from database
+  const categories = getUniqueCategories();
+  
+  // Reset form when dialog opens/closes
+  useEffect(() => {
+    if (open) {
+      setTitle('');
+      setCategory('');
+      setDueDate('');
+      setNotes('');
+      setItems([{ id: '1', name: '', quantity: '', unit: '', stockStatus: '' }]);
+      setCategoryProducts([]);
+    }
+  }, [open]);
+  
+  // When category changes, update the product list
+  useEffect(() => {
+    if (category) {
+      // Get products for the selected category
+      const products = getProductsByCategory(category);
+      
+      // Combine with inventory data to show stock levels
+      const productsWithStock = products.map(product => {
+        const inventoryItem = sampleInventory.find(item => 
+          item.name.toLowerCase() === product.name.toLowerCase() && 
+          item.category.toLowerCase() === category.toLowerCase()
+        );
+        
+        return {
+          ...product,
+          currentStock: inventoryItem?.currentStock || 'Unknown',
+          defaultUnit: product.units[0] || 'kg'
+        };
+      });
+      
+      setCategoryProducts(productsWithStock);
+      
+      // Pre-populate items with products from this category
+      if (productsWithStock.length > 0) {
+        setItems(
+          productsWithStock.map((product, index) => ({
+            id: `item-${index + 1}`,
+            name: product.name,
+            quantity: '',
+            unit: product.defaultUnit,
+            stockStatus: product.currentStock
+          }))
+        );
+      }
+    } else {
+      setCategoryProducts([]);
+      setItems([{ id: '1', name: '', quantity: '', unit: '', stockStatus: '' }]);
+    }
+  }, [category]);
+  
+  const handleAddItem = () => {
+    setItems([...items, { 
+      id: `item-${items.length + 1}`, 
+      name: '', 
+      quantity: '', 
+      unit: 'kg', 
+      stockStatus: '' 
+    }]);
+  };
+  
+  const handleRemoveItem = (id) => {
+    if (items.length > 1) {
+      setItems(items.filter(item => item.id !== id));
+    }
+  };
+  
+  const handleItemChange = (id, field, value) => {
+    setItems(items.map(item => {
+      if (item.id === id) {
+        // If changing the name, also update the stock status and unit
+        if (field === 'name') {
+          const selectedProduct = categoryProducts.find(p => p.name === value);
+          return { 
+            ...item, 
+            [field]: value,
+            stockStatus: selectedProduct?.currentStock || '',
+            unit: selectedProduct?.defaultUnit || item.unit
+          };
+        }
+        return { ...item, [field]: value };
+      }
+      return item;
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validate form
+    if (!title || !category || !dueDate) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    
+    // Check if all items have names and quantities
+    const validItems = items.every(item => item.name && item.quantity);
+    if (!validItems) {
+      toast.error("Please specify name and quantity for all items");
+      return;
+    }
+    
     toast.success("Request created successfully");
     onOpenChange(false);
+  };
+
+  // Helper function to get stock level indicator color
+  const getStockColor = (level) => {
+    switch(level?.toLowerCase()) {
+      case 'low': return 'text-red-500';
+      case 'medium': return 'text-yellow-500';
+      case 'high': return 'text-green-500';
+      default: return 'text-gray-500';
+    }
   };
 
   return (
@@ -303,34 +440,120 @@ const NewRequestDialog = ({ open, onOpenChange }) => {
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="title">Request Title</Label>
-              <Input id="title" placeholder="E.g., Weekly Produce Order" required />
+              <Input 
+                id="title" 
+                placeholder="E.g., Weekly Produce Order" 
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required 
+              />
             </div>
             
             <div className="grid gap-2">
               <Label htmlFor="category">Category</Label>
-              <Input id="category" placeholder="E.g., produce, meat, dairy" required />
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="dueDate">Required By</Label>
-              <Input id="dueDate" type="date" required />
+              <Input 
+                id="dueDate" 
+                type="date" 
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                required 
+              />
             </div>
             
             <div>
-              <Label htmlFor="items">Items</Label>
-              <div className="space-y-2 mt-2">
-                <div className="flex gap-2">
-                  <Input placeholder="Item name" className="flex-1" />
-                  <Input placeholder="Qty" className="w-20" />
-                  <Input placeholder="Unit" className="w-20" />
-                </div>
-                <div className="flex gap-2">
-                  <Input placeholder="Item name" className="flex-1" />
-                  <Input placeholder="Qty" className="w-20" />
-                  <Input placeholder="Unit" className="w-20" />
-                </div>
+              <Label className="mb-2 block">Items</Label>
+              <div className="space-y-2">
+                {items.map((item, index) => (
+                  <div key={item.id} className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <div className="mb-1 text-xs text-gray-500">Name</div>
+                      <Select 
+                        value={item.name} 
+                        onValueChange={(value) => handleItemChange(item.id, 'name', value)}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Select item" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categoryProducts.map((product) => (
+                            <SelectItem key={product.id} value={product.name}>
+                              {product.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="w-20">
+                      <div className="mb-1 text-xs text-gray-500">Qty</div>
+                      <Input 
+                        placeholder="Qty" 
+                        className="h-9"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
+                      />
+                    </div>
+                    <div className="w-20">
+                      <div className="mb-1 text-xs text-gray-500">Unit</div>
+                      <Select 
+                        value={item.unit} 
+                        onValueChange={(value) => handleItemChange(item.id, 'unit', value)}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="kg">kg</SelectItem>
+                          <SelectItem value="g">g</SelectItem>
+                          <SelectItem value="each">each</SelectItem>
+                          <SelectItem value="liter">liter</SelectItem>
+                          <SelectItem value="ml">ml</SelectItem>
+                          <SelectItem value="box">box</SelectItem>
+                          <SelectItem value="dozen">dozen</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon"
+                      className="h-9 w-9 flex-shrink-0"
+                      onClick={() => handleRemoveItem(item.id)}
+                      disabled={items.length === 1}
+                    >
+                      <span className="sr-only">Remove</span>
+                      {item.stockStatus && (
+                        <div className="tooltip" data-tip={`Stock: ${item.stockStatus}`}>
+                          <Info className={`h-4 w-4 ${getStockColor(item.stockStatus)}`} />
+                        </div>
+                      )}
+                    </Button>
+                  </div>
+                ))}
               </div>
-              <Button type="button" variant="ghost" size="sm" className="mt-2 text-xs">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                className="mt-2 text-xs"
+                onClick={handleAddItem}
+              >
                 <Plus className="h-3 w-3 mr-1" />
                 Add Another Item
               </Button>
@@ -338,7 +561,12 @@ const NewRequestDialog = ({ open, onOpenChange }) => {
             
             <div className="grid gap-2">
               <Label htmlFor="notes">Additional Notes</Label>
-              <Textarea id="notes" placeholder="Any specific requirements or notes for the supplier" />
+              <Textarea 
+                id="notes" 
+                placeholder="Any specific requirements or notes for the supplier"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)} 
+              />
             </div>
           </div>
           
