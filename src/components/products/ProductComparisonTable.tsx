@@ -9,6 +9,7 @@ interface ProductWithSuppliers extends Product {
     supplierId: string;
     supplierName: string;
     price: number | undefined;
+    isValid: boolean;
   }>;
 }
 
@@ -21,14 +22,17 @@ export function ProductComparisonTable({ products }: ProductComparisonTableProps
   const getBestPriceSupplier = (suppliers: ProductWithSuppliers['suppliers']) => {
     if (!suppliers.length) return null;
     
-    // Filter out suppliers with undefined prices
-    const suppliersWithPrice = suppliers.filter(s => typeof s.price === 'number');
-    if (!suppliersWithPrice.length) return null;
+    // Filter out suppliers with undefined prices or invalid prices
+    const suppliersWithValidPrice = suppliers.filter(s => 
+      typeof s.price === 'number' && s.isValid
+    );
+    
+    if (!suppliersWithValidPrice.length) return null;
     
     // Find supplier with lowest price
-    return suppliersWithPrice.reduce((best, current) => 
+    return suppliersWithValidPrice.reduce((best, current) => 
       (best.price && current.price && current.price < best.price) ? current : best, 
-      suppliersWithPrice[0]
+      suppliersWithValidPrice[0]
     );
   };
 
@@ -60,7 +64,7 @@ export function ProductComparisonTable({ products }: ProductComparisonTableProps
                       <span className="text-xs text-muted-foreground">{bestPriceSupplier.supplierName}</span>
                     </div>
                   ) : (
-                    <span className="text-muted-foreground">No price available</span>
+                    <span className="text-muted-foreground">No valid price available</span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -72,10 +76,12 @@ export function ProductComparisonTable({ products }: ProductComparisonTableProps
                         className={
                           supplier.supplierId === bestPriceSupplier?.supplierId 
                             ? "bg-green-100 text-green-800 hover:bg-green-100 border-green-200" 
-                            : ""
+                            : !supplier.isValid 
+                              ? "bg-gray-100 text-gray-500 hover:bg-gray-100 border-gray-200"
+                              : ""
                         }
                       >
-                        {supplier.supplierName}: {supplier.price ? `$${supplier.price.toFixed(2)}` : 'N/A'}
+                        {supplier.supplierName}: {supplier.price && supplier.isValid ? `$${supplier.price.toFixed(2)}` : 'N/A'}
                       </Badge>
                     ))}
                   </div>
