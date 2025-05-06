@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
@@ -37,137 +37,136 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Auth Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            
-            {/* Redirect root to appropriate page */}
-            <Route path="/" element={<Navigate to="/login" />} />
+        {/* Removed BrowserRouter from here as it's already in main.tsx */}
+        <Routes>
+          {/* Auth Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          
+          {/* Redirect root to appropriate page */}
+          <Route path="/" element={<Navigate to="/login" />} />
 
-            {/* Purchasing Department Routes */}
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                  <Index />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/quotes" 
-              element={
-                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                  <Quotes />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/quotes/new" 
-              element={
-                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                  <NewQuoteRequest />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/suppliers" 
-              element={
-                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                  <Suppliers />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/suppliers/:id" 
-              element={
-                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                  <SupplierDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/suppliers/:id/edit" 
-              element={
-                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                  <EditSupplier />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/suppliers/:id/products" 
-              element={
-                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                  <SupplierProducts />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/suppliers/new" 
-              element={
-                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                  <EditSupplier />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/products/compare" 
-              element={
-                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                  <ProductComparison />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/products/database" 
-              element={
-                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                  <ProductDatabasePage />
-                </ProtectedRoute>
-              }
-            />
+          {/* Purchasing Department Routes */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
+                <Index />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/quotes" 
+            element={
+              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
+                <Quotes />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/quotes/new" 
+            element={
+              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
+                <NewQuoteRequest />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/suppliers" 
+            element={
+              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
+                <Suppliers />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/suppliers/:id" 
+            element={
+              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
+                <SupplierDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/suppliers/:id/edit" 
+            element={
+              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
+                <EditSupplier />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/suppliers/:id/products" 
+            element={
+              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
+                <SupplierProducts />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/suppliers/new" 
+            element={
+              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
+                <EditSupplier />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/products/compare" 
+            element={
+              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
+                <ProductComparison />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/products/database" 
+            element={
+              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
+                <ProductDatabasePage />
+              </ProtectedRoute>
+            }
+          />
 
-            {/* Chef Routes */}
-            <Route 
-              path="/chef/inventory" 
-              element={
-                <ProtectedRoute allowedRoles={['chef', 'admin']}>
-                  <Inventory />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/chef/requests" 
-              element={
-                <ProtectedRoute allowedRoles={['chef', 'admin']}>
-                  <Requests />
-                </ProtectedRoute>
-              }
-            />
+          {/* Chef Routes */}
+          <Route 
+            path="/chef/inventory" 
+            element={
+              <ProtectedRoute allowedRoles={['chef', 'admin']}>
+                <Inventory />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/chef/requests" 
+            element={
+              <ProtectedRoute allowedRoles={['chef', 'admin']}>
+                <Requests />
+              </ProtectedRoute>
+            }
+          />
 
-            {/* Admin Routes */}
-            <Route 
-              path="/admin/users" 
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <UserManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route 
-              path="/admin/settings" 
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
+          {/* Admin Routes */}
+          <Route 
+            path="/admin/users" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/admin/settings" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
 
-            {/* Catch-All Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+          {/* Catch-All Route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
