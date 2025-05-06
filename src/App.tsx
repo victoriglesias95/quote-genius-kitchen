@@ -22,6 +22,7 @@ import Register from "./pages/Register";
 
 // Chef Pages
 import Inventory from "./pages/chef/Inventory";
+import Requests from "./pages/chef/Requests";
 
 const queryClient = new QueryClient();
 
@@ -120,6 +121,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['chef']}>
                   <Inventory />
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path="/chef/requests" 
+              element={
+                <ProtectedRoute allowedRoles={['chef']}>
+                  <Requests />
                 </ProtectedRoute>
               }
             />
