@@ -20,6 +20,7 @@ import Inventory from '@/pages/chef/Inventory';
 import Settings from '@/pages/admin/Settings';
 import UserManagement from '@/pages/admin/UserManagement';
 import BatchQuoteGenerator from '@/pages/BatchQuoteGenerator';
+import ProductDatabase from '@/pages/ProductDatabase';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -59,6 +60,9 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin/settings" element={<Settings />} />
           <Route path="/admin/users" element={<UserManagement />} />
+          
+          {/* Product Database Route */}
+          <Route path="/products/database" element={<ProductDatabase />} />
           
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />
