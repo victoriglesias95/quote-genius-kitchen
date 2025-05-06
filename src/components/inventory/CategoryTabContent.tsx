@@ -29,10 +29,15 @@ const CategoryTabContent: React.FC<CategoryTabContentProps> = ({
   onEditCategory,
   onUpdateCount
 }) => {
+  // Filter items by current category if not 'all'
+  const categoryItems = category === 'all' 
+    ? items 
+    : items.filter(item => item.category === category);
+
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-xl">
+      <CardHeader className="flex flex-row items-center justify-between py-3">
+        <CardTitle className="text-base xs:text-lg">
           {category === 'all' ? 'All Products' : category}
         </CardTitle>
         {category !== 'all' && (
@@ -42,19 +47,19 @@ const CategoryTabContent: React.FC<CategoryTabContentProps> = ({
             className="h-8"
             onClick={() => onEditCategory(category)}
           >
-            <Edit className="h-4 w-4 mr-1 sm:mr-2" />
+            <Edit className="h-4 w-4 mr-1 xs:mr-2" />
             <span className="hidden xs:inline">Edit List</span>
           </Button>
         )}
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {items.length === 0 ? (
-            <div className="col-span-full text-center p-6 text-gray-500">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 xs:gap-3">
+          {categoryItems.length === 0 ? (
+            <div className="col-span-full text-center p-4 text-gray-500">
               No inventory items found matching your search.
             </div>
           ) : (
-            items.map((item) => (
+            categoryItems.map((item) => (
               <InventoryItemCard 
                 key={item.id} 
                 item={item} 

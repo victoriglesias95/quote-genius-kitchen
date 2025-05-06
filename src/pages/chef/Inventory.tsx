@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -9,6 +10,11 @@ import ProgressCard from '@/components/inventory/ProgressCard';
 import CategoryTabContent from '@/components/inventory/CategoryTabContent';
 import AddProductModal from '@/components/inventory/AddProductModal';
 import EditListModal from '@/components/inventory/EditListModal';
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem
+} from "@/components/ui/carousel";
 
 // Sample inventory data with categories
 const sampleInventory: InventoryItem[] = [
@@ -183,17 +189,28 @@ const Inventory = () => {
         {/* Count progress */}
         <ProgressCard countedItems={countedItems} totalItems={totalItems} />
 
-        {/* Tabs for category filtering */}
+        {/* Tabs for category filtering with carousel */}
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4 overflow-x-auto flex w-full">
-            {categories.map(category => (
-              <TabsTrigger key={category} value={category} className="capitalize">
-                {category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="relative">
+            <Carousel opts={{ align: 'start', loop: false }} className="w-full">
+              <CarouselContent className="-ml-1">
+                <TabsList className="h-auto p-1 bg-transparent w-full flex gap-1">
+                  {categories.map((category) => (
+                    <CarouselItem key={category} className="basis-auto pl-1 min-w-fit">
+                      <TabsTrigger 
+                        value={category} 
+                        className="capitalize px-4 py-2 whitespace-nowrap"
+                      >
+                        {category}
+                      </TabsTrigger>
+                    </CarouselItem>
+                  ))}
+                </TabsList>
+              </CarouselContent>
+            </Carousel>
+          </div>
           
-          {categories.map(category => (
+          {categories.map((category) => (
             <TabsContent key={category} value={category}>
               <CategoryTabContent 
                 category={category}

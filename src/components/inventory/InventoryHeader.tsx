@@ -20,20 +20,20 @@ const InventoryHeader: React.FC<InventoryHeaderProps> = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className="flex flex-col sm:flex-row justify-between gap-3 sm:items-center">
-      <h1 className="text-xl sm:text-2xl font-bold">Inventory Count</h1>
-      <div className="flex gap-2 w-full sm:w-auto">
-        <div className="relative flex-1 sm:min-w-[200px]">
+    <div className="flex flex-col xs:flex-row justify-between gap-3 xs:items-center">
+      <h1 className="text-lg xs:text-xl font-bold">Inventory Count</h1>
+      <div className="flex gap-2 w-full xs:w-auto">
+        <div className="relative flex-1 xs:min-w-[160px]">
           <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search products..."
+            placeholder="Search..."
             value={searchTerm}
             onChange={onSearchChange}
-            className="pl-8"
+            className="pl-8 h-9"
           />
         </div>
-        <Button onClick={onAddProduct} size={isMobile ? "sm" : "default"} className="shrink-0">
-          <PlusCircle className="h-4 w-4 mr-1 sm:mr-2" />
+        <Button onClick={onAddProduct} size="sm" className="shrink-0">
+          <PlusCircle className="h-4 w-4 mr-1" />
           {isMobile ? 'Add' : 'Add Product'}
         </Button>
       </div>
