@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // Define the user roles
-export type UserRole = 'chef' | 'purchasing' | 'supplier' | null;
+export type UserRole = 'purchasing' | 'chef' | 'receiver' | null;
 
 // Define the user type
 export interface User {
@@ -16,9 +16,9 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string, role: UserRole) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  setRole: (role: UserRole) => void;
+  register: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
 }
 
 // Create the context with default values
@@ -27,7 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   login: async () => {},
   logout: () => {},
-  setRole: () => {},
+  register: async () => {},
 });
 
 // Create a provider component
@@ -46,20 +46,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAuthenticated = !!user;
 
   // Mock login function - in a real app, you'd call an API
-  const login = async (email: string, password: string, role: UserRole) => {
+  const login = async (email: string, password: string) => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // For demo purposes, we'll create a mock user
-    const mockUser: User = {
-      id: '123',
-      name: email.split('@')[0],
+    // In a real app, we would check the credentials against a database
+    // For now, we'll just retrieve the user from localStorage
+    const usersString = localStorage.getItem('procureChef_users');
+    if (!usersString) {
+      throw new Error("No users found. Please register first.");
+    }
+    
+    const users = JSON.parse(usersString) as User[];
+    const foundUser = users.find(u => u.email === email);
+    
+    if (!foundUser) {
+      throw new Error("User not found.");
+    }
+    
+    // In a real app, we would check the password here
+    // For demo purposes, we'll just use the found user
+    setUser(foundUser);
+    localStorage.setItem('procureChef_user', JSON.stringify(foundUser));
+  };
+
+  // Register a new user
+  const register = async (name: string, email: string, password: string, role: UserRole) => {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const newUser: User = {
+      id: Date.now().toString(),
+      name,
       email,
       role
     };
     
-    setUser(mockUser);
-    localStorage.setItem('procureChef_user', JSON.stringify(mockUser));
+    // Store user in mock "database" (localStorage)
+    const usersString = localStorage.getItem('procureChef_users');
+    const users = usersString ? JSON.parse(usersString) as User[] : [];
+    
+    // Check if user already exists
+    if (users.some(u => u.email === email)) {
+      throw new Error("User already exists.");
+    }
+    
+    users.push(newUser);
+    localStorage.setItem('procureChef_users', JSON.stringify(users));
+    
+    // Automatically log in the user
+    setUser(newUser);
+    localStorage.setItem('procureChef_user', JSON.stringify(newUser));
   };
 
   const logout = () => {
@@ -67,16 +104,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('procureChef_user');
   };
 
-  const setRole = (role: UserRole) => {
-    if (user) {
-      const updatedUser = { ...user, role };
-      setUser(updatedUser);
-      localStorage.setItem('procureChef_user', JSON.stringify(updatedUser));
-    }
-  };
-
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, setRole }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );

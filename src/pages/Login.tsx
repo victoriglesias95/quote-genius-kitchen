@@ -1,18 +1,16 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { useAuth, UserRole } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('purchasing');
   const [isLoading, setIsLoading] = useState(false);
   
   const { login } = useAuth();
@@ -28,20 +26,14 @@ const Login = () => {
     
     try {
       setIsLoading(true);
-      await login(email, password, role);
+      await login(email, password);
       
-      toast.success(`Logged in successfully as ${role}`);
+      toast.success('Logged in successfully');
       
-      // Redirect based on role
-      if (role === 'chef') {
-        navigate('/chef/inventory');
-      } else if (role === 'purchasing') {
-        navigate('/suppliers');
-      } else if (role === 'supplier') {
-        navigate('/supplier/quotes');
-      }
+      // User will be redirected based on their role in ProtectedRoute
+      navigate('/dashboard');
     } catch (error) {
-      toast.error('Login failed. Please check your credentials.');
+      toast.error(error instanceof Error ? error.message : 'Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -83,28 +75,17 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Select your role</Label>
-              <RadioGroup value={role} onValueChange={(value) => setRole(value as UserRole)} className="flex flex-col space-y-1">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="chef" id="chef" />
-                  <Label htmlFor="chef">Chef</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="purchasing" id="purchasing" />
-                  <Label htmlFor="purchasing">Purchasing Department</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="supplier" id="supplier" />
-                  <Label htmlFor="supplier">Supplier</Label>
-                </div>
-              </RadioGroup>
-            </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Logging in...' : 'Login'}
             </Button>
+            <div className="text-center text-sm">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-primary hover:underline">
+                Register
+              </Link>
+            </div>
           </CardFooter>
         </form>
       </Card>

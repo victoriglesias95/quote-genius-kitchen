@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  allowedRoles = ['chef', 'purchasing', 'supplier'] 
+  allowedRoles = ['chef', 'purchasing', 'receiver'] 
 }) => {
   const { user, isAuthenticated } = useAuth();
 
@@ -26,8 +26,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       return <Navigate to="/chef/inventory" replace />;
     } else if (user.role === 'purchasing') {
       return <Navigate to="/suppliers" replace />;
-    } else if (user.role === 'supplier') {
-      return <Navigate to="/supplier/quotes" replace />;
+    } else if (user.role === 'receiver') {
+      return <Navigate to="/receiver/dashboard" replace />;
     }
     
     // Fallback to login if role is not recognized

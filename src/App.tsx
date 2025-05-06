@@ -18,6 +18,7 @@ import SupplierProducts from "./pages/SupplierProducts";
 import ProductComparison from "./pages/ProductComparison";
 import ProductDatabasePage from "./pages/ProductDatabase";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 // Chef Pages
 import Inventory from "./pages/chef/Inventory";
@@ -34,6 +35,7 @@ const App = () => (
           <Routes>
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             
             {/* Redirect root to appropriate page */}
             <Route path="/" element={<Navigate to="/login" />} />
