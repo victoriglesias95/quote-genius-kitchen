@@ -33,15 +33,22 @@ export function MissingItemsAlert({
     return findMissingItems(selectedItems, chefRequests);
   }, [selectedItems, chefRequests]);
 
-  // Find items with no supplier quotes
-  const noQuoteItems = useMemo(() => {
-    return missingItems.filter(item => item.quotedBy.length === 0);
-  }, [missingItems]);
-  
   // Filtered missing items (exclude handled ones)
-  const filteredMissingItems = missingItems.filter(
-    item => !handledItems.has(`${item.name}-${item.requestId}`)
-  );
+  const filteredMissingItems = useMemo(() => {
+    return missingItems.filter(
+      item => !handledItems.has(`${item.name}-${item.requestId}`)
+    );
+  }, [missingItems, handledItems]);
+  
+  // Find items with no supplier quotes (and also filter out handled ones)
+  const noQuoteItems = useMemo(() => {
+    return filteredMissingItems.filter(item => item.quotedBy.length === 0);
+  }, [filteredMissingItems]);
+  
+  // Find items with available quotes (and also filter out handled ones)
+  const itemsWithQuotes = useMemo(() => {
+    return filteredMissingItems.filter(item => item.quotedBy.length > 0);
+  }, [filteredMissingItems]);
 
   // Handle setting skip reason
   const handleReasonChange = (itemKey: string, reason: string) => {
@@ -137,51 +144,49 @@ export function MissingItemsAlert({
             </AccordionItem>
           )}
           
-          {filteredMissingItems.filter(item => item.quotedBy.length > 0).length > 0 && (
+          {itemsWithQuotes.length > 0 && (
             <AccordionItem value="with-quotes">
               <AccordionTrigger className="text-amber-600 font-medium">
                 <div className="flex items-center gap-2">
                   <Info className="h-4 w-4" />
-                  <span>{filteredMissingItems.filter(item => item.quotedBy.length > 0).length} items with available quotes</span>
+                  <span>{itemsWithQuotes.length} items with available quotes</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
                 <div className="space-y-4 p-2">
-                  {filteredMissingItems
-                    .filter(item => item.quotedBy.length > 0)
-                    .map((item) => (
-                      <MissingItemCard 
-                        key={`${item.name}-${item.requestId}`} 
-                        item={item} 
-                        onAddQuote={(supplierId) => {
-                          if (onAddMissingItem) {
-                            onAddMissingItem(item, supplierId);
-                          }
-                          
-                          // Mark item as handled
-                          setHandledItems(prev => {
-                            const updated = new Set(prev);
-                            updated.add(`${item.name}-${item.requestId}`);
-                            return updated;
-                          });
-                          
-                          toast.success(`Added ${item.name} from ${item.quotedBy.find(s => s.supplierId === supplierId)?.supplierName}`);
-                        }}
-                        onSkipItem={(reason) => {
-                          if (onSkipItem) {
-                            onSkipItem(item, reason);
-                          }
-                          
-                          // Mark item as handled
-                          setHandledItems(prev => {
-                            const updated = new Set(prev);
-                            updated.add(`${item.name}-${item.requestId}`);
-                            return updated;
-                          });
-                          
-                          toast.info(`Skipped ${item.name}: ${reason}`);
-                        }}
-                      />
+                  {itemsWithQuotes.map((item) => (
+                    <MissingItemCard 
+                      key={`${item.name}-${item.requestId}`} 
+                      item={item} 
+                      onAddQuote={(supplierId) => {
+                        if (onAddMissingItem) {
+                          onAddMissingItem(item, supplierId);
+                        }
+                        
+                        // Mark item as handled
+                        setHandledItems(prev => {
+                          const updated = new Set(prev);
+                          updated.add(`${item.name}-${item.requestId}`);
+                          return updated;
+                        });
+                        
+                        toast.success(`Added ${item.name} from ${item.quotedBy.find(s => s.supplierId === supplierId)?.supplierName}`);
+                      }}
+                      onSkipItem={(reason) => {
+                        if (onSkipItem) {
+                          onSkipItem(item, reason);
+                        }
+                        
+                        // Mark item as handled
+                        setHandledItems(prev => {
+                          const updated = new Set(prev);
+                          updated.add(`${item.name}-${item.requestId}`);
+                          return updated;
+                        });
+                        
+                        toast.info(`Skipped ${item.name}: ${reason}`);
+                      }}
+                    />
                   ))}
                 </div>
               </AccordionContent>
