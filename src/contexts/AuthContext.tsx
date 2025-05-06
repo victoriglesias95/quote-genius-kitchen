@@ -1,6 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { UserRole, getRolePermissions } from '@/components/chef/requests/types';
+
+// Export the UserRole type
+export type UserRole = 'chef' | 'purchasing' | 'receiver';
 
 // Define the user type
 export interface User {
@@ -9,6 +11,48 @@ export interface User {
   email: string;
   role: UserRole;
 }
+
+// Helper function to get role permissions
+export const getRolePermissions = (role: UserRole) => {
+  switch (role) {
+    case 'chef':
+      return {
+        canCreateRequest: true,
+        canApproveRequest: false,
+        canSubmitQuote: false,
+        canPlaceOrder: false,
+        canReceiveOrder: true,
+        canViewAnalytics: true,
+      };
+    case 'purchasing':
+      return {
+        canCreateRequest: false,
+        canApproveRequest: true,
+        canSubmitQuote: false,
+        canPlaceOrder: true,
+        canReceiveOrder: false,
+        canViewAnalytics: true,
+      };
+    case 'receiver':
+      return {
+        canCreateRequest: false,
+        canApproveRequest: false,
+        canSubmitQuote: false,
+        canPlaceOrder: false,
+        canReceiveOrder: true,
+        canViewAnalytics: false,
+      };
+    default:
+      return {
+        canCreateRequest: false,
+        canApproveRequest: false,
+        canSubmitQuote: false,
+        canPlaceOrder: false,
+        canReceiveOrder: false,
+        canViewAnalytics: false,
+      };
+  }
+};
 
 // Define the auth context type
 interface AuthContextType {
