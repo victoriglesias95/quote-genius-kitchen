@@ -2,8 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar, SidebarToggle } from '@/components/layout/Sidebar';
-import { sampleSuppliers, Supplier } from '@/pages/Suppliers';
-import { Product } from '@/components/suppliers/SupplierList';
+import { sampleSuppliers } from '@/pages/Suppliers';
+import { Product, Supplier } from '@/components/suppliers/SupplierList';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
