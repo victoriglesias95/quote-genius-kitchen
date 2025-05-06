@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SelectedQuoteItem } from '@/services/purchasingService';
 import { Request } from '@/components/chef/requests/types';
+import { AlertOctagon, CheckCircle } from 'lucide-react';
 
 export interface OrderCoverageSummaryProps {
   selectedItems: SelectedQuoteItem[];
@@ -65,12 +66,21 @@ export function OrderCoverageSummary({ selectedItems, chefRequests }: OrderCover
           
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="text-sm text-gray-600">Items Covered</div>
-            <div className="text-2xl font-bold mt-1">{metrics.coveredProducts}</div>
+            <div className="flex items-center gap-1 text-2xl font-bold mt-1">
+              {metrics.coveredProducts}
+              {metrics.coveredProducts === metrics.totalRequestedProducts && (
+                <CheckCircle className="h-5 w-5 ml-1 text-green-500" />
+              )}
+            </div>
           </div>
           
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="text-sm text-gray-600">Coverage Percentage</div>
-            <div className="text-2xl font-bold mt-1">
+            <div className={`text-2xl font-bold mt-1 ${
+              metrics.coveragePercentage < 85 ? 'text-amber-600' : 
+              metrics.coveragePercentage < 100 ? 'text-blue-600' : 
+              'text-green-600'
+            }`}>
               {metrics.coveragePercentage.toFixed(1)}%
             </div>
           </div>

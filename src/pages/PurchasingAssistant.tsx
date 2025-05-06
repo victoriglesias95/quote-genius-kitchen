@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar, SidebarToggle } from '@/components/layout/Sidebar';
 import { SupplierOrderMapping } from '@/components/purchasing/SupplierOrderMapping';
@@ -14,7 +14,9 @@ import {
   MissingItem, 
   SelectedQuoteItem, 
   SupplierGroup,
-  groupItemsBySupplier 
+  groupItemsBySupplier,
+  storeManuallyAddedItem,
+  clearManuallyAddedItems
 } from '@/services/purchasingService';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -55,9 +57,12 @@ const PurchasingAssistant = () => {
   const [manuallySelectedItems, setManuallySelectedItems] = useState<Record<string, boolean>>({});
   const [specialInstructions, setSpecialInstructions] = useState<Record<string, string>>({});
   
+  // NEW: State to track locally added items (before they are persisted to storage)
+  const [locallyAddedItems, setLocallyAddedItems] = useState<SelectedQuoteItem[]>([]);
+  
   // Fetch selected quote items
   const { 
-    data: selectedItems = [], 
+    data: fetchedItems = [], 
     isLoading: isLoadingItems, 
     error: itemsError,
     refetch: refetchSelectedItems
@@ -65,6 +70,11 @@ const PurchasingAssistant = () => {
     queryKey: ['selectedQuoteItems'],
     queryFn: fetchSelectedQuoteItems,
   });
+
+  // Combine fetched items with locally added items
+  const selectedItems = useMemo(() => {
+    return [...fetchedItems, ...locallyAddedItems];
+  }, [fetchedItems, locallyAddedItems]);
 
   // Fetch original chef requests
   const { 
@@ -80,9 +90,10 @@ const PurchasingAssistant = () => {
   const {
     data: validationResults,
     isLoading: isValidating,
-    error: validationError
+    error: validationError,
+    refetch: refetchValidation
   } = useQuery({
-    queryKey: ['supplierValidation'],
+    queryKey: ['supplierValidation', selectedItems.length],
     queryFn: () => validateSupplierData(selectedItems),
     enabled: selectedItems.length > 0
   });
@@ -95,22 +106,37 @@ const PurchasingAssistant = () => {
   // Mutation for adding a missing item from a quote
   const addMissingItemMutation = useMutation({
     mutationFn: async ({ item, supplierId }: { item: MissingItem; supplierId: string }) => {
-      // In a real app, this would be an API call to add the item
-      // For now, we'll just simulate adding it to our local state
+      // Create a new selected quote item
+      const supplierInfo = item.quotedBy.find(s => s.supplierId === supplierId);
+      
+      if (!supplierInfo) {
+        throw new Error("Supplier information not found");
+      }
+      
       const newItem: SelectedQuoteItem = {
         id: `new-item-${Date.now()}`,
         itemName: item.name,
         quantity: item.quantity,
         unit: item.unit,
         supplierId: supplierId,
-        supplierName: item.quotedBy.find(s => s.supplierId === supplierId)?.supplierName || '',
-        price: item.quotedBy.find(s => s.supplierId === supplierId)?.price || 0,
-        totalPrice: (item.quotedBy.find(s => s.supplierId === supplierId)?.price || 0) * item.quantity,
+        supplierName: supplierInfo.supplierName,
+        price: supplierInfo.price,
+        totalPrice: supplierInfo.price * item.quantity,
         requestId: item.requestId,
         requestTitle: item.requestTitle,
         isOptional: false,
         isManuallySelected: true
       };
+      
+      // In a real app, you would call an API to add the item
+      // For this demo, we'll store it in localStorage and update our local state
+      await storeManuallyAddedItem(newItem);
+      
+      return newItem;
+    },
+    onSuccess: (newItem) => {
+      // Update local state to immediately reflect the added item
+      setLocallyAddedItems(prev => [...prev, newItem]);
       
       // Track manually selected items
       setManuallySelectedItems(prev => ({
@@ -118,15 +144,10 @@ const PurchasingAssistant = () => {
         [newItem.id]: true
       }));
       
-      // In a real app, you would call an API to add the item
-      // For now, we'll just simulate adding it and refetching
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      return newItem;
-    },
-    onSuccess: (newItem) => {
-      refetchSelectedItems();
       toast.success(`Added ${newItem.itemName} to selected items`);
+      
+      // Refresh validation after adding an item
+      refetchValidation();
     },
     onError: (error) => {
       toast.error("Failed to add item");
@@ -147,6 +168,10 @@ const PurchasingAssistant = () => {
       // In a real app, this would call your API to place the orders
       // For now, we'll just simulate it
       await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Clear any stored manually added items
+      clearManuallyAddedItems();
+      
       return { success: true };
     },
     onSuccess: () => {
@@ -165,9 +190,9 @@ const PurchasingAssistant = () => {
   };
 
   // Handle adding missing item
-  const handleAddMissingItem = (item: MissingItem, supplierId: string) => {
+  const handleAddMissingItem = useCallback((item: MissingItem, supplierId: string) => {
     addMissingItemMutation.mutate({ item, supplierId });
-  };
+  }, [addMissingItemMutation]);
   
   // Handle proceeding to place orders
   const handlePlaceOrders = () => {
@@ -289,7 +314,7 @@ const PurchasingAssistant = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <Tabs defaultValue={supplierGroups[0]?.supplierId || "summary"}>
+          <Tabs defaultValue={supplierGroups.length > 0 ? (supplierGroups[0]?.supplierId || "summary") : "summary"}>
             <TabsList className="w-full">
               <TabsTrigger value="summary">Summary</TabsTrigger>
               {supplierGroups.map(group => (
@@ -416,7 +441,7 @@ const PurchasingAssistant = () => {
                         </TableHeader>
                         <TableBody>
                           {group.items.map(item => {
-                            const isManuallySelected = manuallySelectedItems[item.id];
+                            const isManuallySelected = manuallySelectedItems[item.id] || item.isManuallySelected;
                             
                             return (
                               <TableRow key={item.id}>
@@ -489,4 +514,3 @@ const PurchasingAssistant = () => {
 };
 
 export default PurchasingAssistant;
-

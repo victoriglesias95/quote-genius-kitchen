@@ -46,8 +46,37 @@ export interface ValidationResult {
   issues: string[];
 }
 
-// Fetch selected quote items (in a real app, these would be stored in the database)
-// For now, we'll use mock data
+// Local storage key for manually added items
+const MANUALLY_ADDED_ITEMS_KEY = 'manuallyAddedItems';
+
+// Helper to get manually added items from local storage
+const getManuallyAddedItems = (): SelectedQuoteItem[] => {
+  try {
+    const storedItems = localStorage.getItem(MANUALLY_ADDED_ITEMS_KEY);
+    return storedItems ? JSON.parse(storedItems) : [];
+  } catch (error) {
+    console.error("Failed to retrieve manually added items from storage:", error);
+    return [];
+  }
+};
+
+// Helper to store manually added items to local storage
+export const storeManuallyAddedItem = (item: SelectedQuoteItem): void => {
+  try {
+    const existingItems = getManuallyAddedItems();
+    const updatedItems = [...existingItems, item];
+    localStorage.setItem(MANUALLY_ADDED_ITEMS_KEY, JSON.stringify(updatedItems));
+  } catch (error) {
+    console.error("Failed to store manually added item:", error);
+  }
+};
+
+// Helper to clear manually added items
+export const clearManuallyAddedItems = (): void => {
+  localStorage.removeItem(MANUALLY_ADDED_ITEMS_KEY);
+};
+
+// Fetch selected quote items (including manually added ones)
 export const fetchSelectedQuoteItems = async (): Promise<SelectedQuoteItem[]> => {
   try {
     // In a real app, you would fetch this from your database
@@ -56,8 +85,8 @@ export const fetchSelectedQuoteItems = async (): Promise<SelectedQuoteItem[]> =>
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Return mock data
-    return [
+    // Base mock data
+    const mockItems = [
       {
         id: "item-1",
         itemName: "Organic Tomatoes",
@@ -143,6 +172,12 @@ export const fetchSelectedQuoteItems = async (): Promise<SelectedQuoteItem[]> =>
         isManuallySelected: false
       }
     ];
+    
+    // Get any manually added items from storage
+    const manuallyAddedItems = getManuallyAddedItems();
+    
+    // Return combined list
+    return [...mockItems, ...manuallyAddedItems];
   } catch (error) {
     console.error("Failed to fetch selected quote items:", error);
     toast.error("Failed to load selected items");
