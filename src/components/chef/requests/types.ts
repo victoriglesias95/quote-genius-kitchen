@@ -43,6 +43,8 @@ export interface Request {
     submittedDate: Date;
   }[];
   selectedQuote?: string; // ID of the selected quote
+  purchaseOrderId?: string; // Reference to purchase order when created
+  purchaseOrderStatus?: string; // Status of the purchase order
 }
 
 export interface RequestTabData {

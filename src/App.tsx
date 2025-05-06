@@ -11,6 +11,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import NewQuoteRequest from "./pages/NewQuoteRequest";
+import Quotes from "./pages/Quotes";
 import Suppliers from "./pages/Suppliers";
 import SupplierDetail from "./pages/SupplierDetail";
 import EditSupplier from "./pages/EditSupplier";
@@ -51,6 +52,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
                   <Index />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/quotes" 
+              element={
+                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
+                  <Quotes />
                 </ProtectedRoute>
               } 
             />
