@@ -50,7 +50,7 @@ export interface RequestTabData {
   label: string;
 }
 
-export type UserRole = 'chef' | 'purchasing' | 'receiver' | null;
+export type UserRole = 'chef' | 'purchasing' | 'receiver' | 'admin' | null;
 
 export interface UserPermissions {
   canCreateRequest: boolean;
@@ -59,6 +59,7 @@ export interface UserPermissions {
   canPlaceOrder: boolean;
   canReceiveOrder: boolean;
   canViewAnalytics: boolean;
+  canManageUsers?: boolean;
 }
 
 // Define role permissions
@@ -90,6 +91,16 @@ export const getRolePermissions = (role: UserRole): UserPermissions => {
         canPlaceOrder: false,
         canReceiveOrder: true,
         canViewAnalytics: false,
+      };
+    case 'admin':
+      return {
+        canCreateRequest: true,
+        canApproveRequest: true,
+        canSubmitQuote: true,
+        canPlaceOrder: true,
+        canReceiveOrder: true,
+        canViewAnalytics: true,
+        canManageUsers: true,
       };
     default:
       return {

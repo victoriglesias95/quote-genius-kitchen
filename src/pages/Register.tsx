@@ -46,6 +46,8 @@ const Register = () => {
         navigate('/suppliers');
       } else if (role === 'receiver') {
         navigate('/receiver/dashboard');
+      } else if (role === 'admin') {
+        navigate('/admin/users');
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Registration failed');
@@ -123,6 +125,10 @@ const Register = () => {
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="receiver" id="receiver" />
                   <Label htmlFor="receiver">Receiver</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="admin" id="admin" />
+                  <Label htmlFor="admin">Administrator</Label>
                 </div>
               </RadioGroup>
             </div>

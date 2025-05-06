@@ -24,6 +24,10 @@ import Register from "./pages/Register";
 import Inventory from "./pages/chef/Inventory";
 import Requests from "./pages/chef/Requests";
 
+// Admin Pages
+import UserManagement from "./pages/admin/UserManagement";
+import Settings from "./pages/admin/Settings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -45,7 +49,7 @@ const App = () => (
             <Route 
               path="/dashboard" 
               element={
-                <ProtectedRoute allowedRoles={['purchasing']}>
+                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
                   <Index />
                 </ProtectedRoute>
               } 
@@ -53,7 +57,7 @@ const App = () => (
             <Route 
               path="/quotes/new" 
               element={
-                <ProtectedRoute allowedRoles={['purchasing']}>
+                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
                   <NewQuoteRequest />
                 </ProtectedRoute>
               } 
@@ -61,7 +65,7 @@ const App = () => (
             <Route 
               path="/suppliers" 
               element={
-                <ProtectedRoute allowedRoles={['purchasing']}>
+                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
                   <Suppliers />
                 </ProtectedRoute>
               }
@@ -69,7 +73,7 @@ const App = () => (
             <Route 
               path="/suppliers/:id" 
               element={
-                <ProtectedRoute allowedRoles={['purchasing']}>
+                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
                   <SupplierDetail />
                 </ProtectedRoute>
               }
@@ -77,7 +81,7 @@ const App = () => (
             <Route 
               path="/suppliers/:id/edit" 
               element={
-                <ProtectedRoute allowedRoles={['purchasing']}>
+                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
                   <EditSupplier />
                 </ProtectedRoute>
               }
@@ -85,7 +89,7 @@ const App = () => (
             <Route 
               path="/suppliers/:id/products" 
               element={
-                <ProtectedRoute allowedRoles={['purchasing']}>
+                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
                   <SupplierProducts />
                 </ProtectedRoute>
               }
@@ -93,7 +97,7 @@ const App = () => (
             <Route 
               path="/suppliers/new" 
               element={
-                <ProtectedRoute allowedRoles={['purchasing']}>
+                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
                   <EditSupplier />
                 </ProtectedRoute>
               }
@@ -101,7 +105,7 @@ const App = () => (
             <Route 
               path="/products/compare" 
               element={
-                <ProtectedRoute allowedRoles={['purchasing']}>
+                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
                   <ProductComparison />
                 </ProtectedRoute>
               }
@@ -109,7 +113,7 @@ const App = () => (
             <Route 
               path="/products/database" 
               element={
-                <ProtectedRoute allowedRoles={['purchasing']}>
+                <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
                   <ProductDatabasePage />
                 </ProtectedRoute>
               }
@@ -119,7 +123,7 @@ const App = () => (
             <Route 
               path="/chef/inventory" 
               element={
-                <ProtectedRoute allowedRoles={['chef']}>
+                <ProtectedRoute allowedRoles={['chef', 'admin']}>
                   <Inventory />
                 </ProtectedRoute>
               }
@@ -127,8 +131,26 @@ const App = () => (
             <Route 
               path="/chef/requests" 
               element={
-                <ProtectedRoute allowedRoles={['chef']}>
+                <ProtectedRoute allowedRoles={['chef', 'admin']}>
                   <Requests />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin Routes */}
+            <Route 
+              path="/admin/users" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path="/admin/settings" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Settings />
                 </ProtectedRoute>
               }
             />

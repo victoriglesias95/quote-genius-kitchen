@@ -25,7 +25,8 @@ import {
   Mail,
   LayoutGrid,
   Database,
-  LogOut
+  LogOut,
+  Shield,
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 
@@ -44,6 +45,15 @@ export function AppSidebar() {
     { title: "Reports", path: "/reports", icon: BarChart3 },
     { title: "Settings", path: "/settings", icon: Settings },
   ];
+  
+  // Menu items for admin
+  const adminMenuItems = [
+    { title: "User Management", path: "/admin/users", icon: Users },
+    { title: "System Settings", path: "/admin/settings", icon: Settings },
+  ];
+
+  // Determine if admin navigation should be shown
+  const showAdminNav = user?.role === 'admin';
 
   return (
     <Sidebar>
@@ -76,6 +86,30 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        
+        {/* Admin Navigation */}
+        {showAdminNav && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-sidebar-foreground opacity-70 flex items-center gap-1">
+              <Shield className="h-4 w-4 text-purple-400" />
+              Admin
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminMenuItems.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton asChild className={location.pathname === item.path ? "active" : ""}>
+                      <Link to={item.path} className="nav-link">
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         <div className="flex flex-col space-y-2">

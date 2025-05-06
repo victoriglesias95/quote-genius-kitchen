@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // Export the UserRole type
-export type UserRole = 'chef' | 'purchasing' | 'receiver';
+export type UserRole = 'chef' | 'purchasing' | 'receiver' | 'admin';
 
 // Define the user type
 export interface User {
@@ -42,6 +42,16 @@ export const getRolePermissions = (role: UserRole) => {
         canReceiveOrder: true,
         canViewAnalytics: false,
       };
+    case 'admin':
+      return {
+        canCreateRequest: true,
+        canApproveRequest: true,
+        canSubmitQuote: true,
+        canPlaceOrder: true,
+        canReceiveOrder: true,
+        canViewAnalytics: true,
+        canManageUsers: true,
+      };
     default:
       return {
         canCreateRequest: false,
@@ -62,6 +72,9 @@ interface AuthContextType {
   logout: () => void;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
   hasPermission: (permission: keyof ReturnType<typeof getRolePermissions>) => boolean;
+  getAllUsers: () => User[];
+  updateUserRole: (userId: string, newRole: UserRole) => void;
+  deleteUser: (userId: string) => void;
 }
 
 // Create the context with default values
@@ -72,6 +85,9 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
   register: async () => {},
   hasPermission: () => false,
+  getAllUsers: () => [],
+  updateUserRole: () => {},
+  deleteUser: () => {},
 });
 
 // Create a provider component
@@ -93,7 +109,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const hasPermission = (permission: keyof ReturnType<typeof getRolePermissions>) => {
     if (!user || !user.role) return false;
     const permissions = getRolePermissions(user.role);
-    return permissions[permission];
+    return permissions[permission] || false;
+  };
+
+  // Get all registered users
+  const getAllUsers = () => {
+    const usersString = localStorage.getItem('procureChef_users');
+    if (!usersString) return [];
+    return JSON.parse(usersString) as User[];
+  };
+
+  // Update user role
+  const updateUserRole = (userId: string, newRole: UserRole) => {
+    const usersString = localStorage.getItem('procureChef_users');
+    if (!usersString) return;
+    
+    const users = JSON.parse(usersString) as User[];
+    const updatedUsers = users.map(u => {
+      if (u.id === userId) {
+        return { ...u, role: newRole };
+      }
+      return u;
+    });
+    
+    localStorage.setItem('procureChef_users', JSON.stringify(updatedUsers));
+    
+    // If the updated user is the current user, update the current user state
+    if (user && user.id === userId) {
+      const updatedUser = { ...user, role: newRole };
+      setUser(updatedUser);
+      localStorage.setItem('procureChef_user', JSON.stringify(updatedUser));
+    }
+  };
+
+  // Delete a user
+  const deleteUser = (userId: string) => {
+    const usersString = localStorage.getItem('procureChef_users');
+    if (!usersString) return;
+    
+    const users = JSON.parse(usersString) as User[];
+    const filteredUsers = users.filter(u => u.id !== userId);
+    
+    localStorage.setItem('procureChef_users', JSON.stringify(filteredUsers));
+    
+    // If the deleted user is the current user, log them out
+    if (user && user.id === userId) {
+      logout();
+    }
   };
 
   // Mock login function - in a real app, you'd call an API
@@ -156,7 +218,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, register, hasPermission }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated, 
+      login, 
+      logout, 
+      register, 
+      hasPermission,
+      getAllUsers,
+      updateUserRole,
+      deleteUser
+    }}>
       {children}
     </AuthContext.Provider>
   );
