@@ -27,6 +27,7 @@ import {
   Database,
   LogOut,
   Shield,
+  ShoppingBag,
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 
@@ -42,6 +43,7 @@ export function AppSidebar() {
     { title: "Ingredients", path: "/ingredients", icon: Package },
     { title: "Quote Requests", path: "/quotes", icon: FileText },
     { title: "Product Comparison", path: "/products/compare", icon: LayoutGrid },
+    { title: "Purchasing Assistant", path: "/quotes/purchasing-assistant", icon: ShoppingBag },
     { title: "Reports", path: "/reports", icon: BarChart3 },
     { title: "Settings", path: "/settings", icon: Settings },
   ];
