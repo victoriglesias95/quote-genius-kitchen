@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Check, Clock } from 'lucide-react';
+import { Check, Clock, Truck, AlertTriangle } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface RequestItem {
   id: string;
@@ -25,10 +26,32 @@ interface RequestProps {
     category: string;
     items: RequestItem[];
     notes?: string;
+    quoteDeadline?: Date;
+    quotes?: {
+      supplierId: string;
+      supplierName: string;
+      items: {
+        itemId: string;
+        price: number;
+        quantity: number | string;
+        notes?: string;
+      }[];
+      totalPrice: number;
+      deliveryDate: Date;
+      submittedDate: Date;
+    }[];
   };
+  canEdit?: boolean;
+  canApprove?: boolean;
+  canReceive?: boolean;
 }
 
-export const RequestCard: React.FC<RequestProps> = ({ request }) => {
+export const RequestCard: React.FC<RequestProps> = ({ 
+  request, 
+  canEdit = false, 
+  canApprove = false,
+  canReceive = false 
+}) => {
   const [showDetails, setShowDetails] = useState(false);
   
   const getStatusBadge = (status: string) => {
@@ -43,6 +66,12 @@ export const RequestCard: React.FC<RequestProps> = ({ request }) => {
         return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Rejected</Badge>;
       case 'delivered':
         return <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200">Delivered</Badge>;
+      case 'awaiting_quotes':
+        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Awaiting Quotes</Badge>;
+      case 'quote_selected':
+        return <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">Quote Selected</Badge>;
+      case 'ordered':
+        return <Badge variant="outline" className="bg-violet-50 text-violet-700 border-violet-200">Ordered</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -52,6 +81,22 @@ export const RequestCard: React.FC<RequestProps> = ({ request }) => {
     setShowDetails(true);
   };
 
+  const handleMarkAsDelivered = () => {
+    toast.success(`Marked ${request.title} as delivered`);
+    setShowDetails(false);
+  };
+  
+  const handleApproveRequest = () => {
+    toast.success(`Approved ${request.title}`);
+    toast.info(`Request sent to suppliers for quotes`);
+    setShowDetails(false);
+  };
+  
+  const handleRejectRequest = () => {
+    toast.error(`Rejected ${request.title}`);
+    setShowDetails(false);
+  };
+
   // Format delivery info
   const getDeliveryInfo = () => {
     if (request.status === 'delivered' && request.deliveryDate) {
@@ -59,6 +104,42 @@ export const RequestCard: React.FC<RequestProps> = ({ request }) => {
         <div className="flex items-center gap-1 text-xs text-emerald-600">
           <Check className="h-3 w-3" />
           <span>Delivered on {format(request.deliveryDate, 'MMM d, yyyy')}</span>
+        </div>
+      );
+    } else if (request.status === 'ordered' || request.status === 'quote_selected') {
+      return (
+        <div className="flex items-center gap-1 text-xs text-violet-600">
+          <Truck className="h-3 w-3" />
+          <span>Delivery expected by {format(request.dueDate, 'MMM d, yyyy')}</span>
+        </div>
+      );
+    }
+    return null;
+  };
+  
+  // Quote deadline info
+  const getQuoteDeadlineInfo = () => {
+    if (request.quoteDeadline && (request.status === 'approved' || request.status === 'awaiting_quotes')) {
+      const isUrgent = request.quoteDeadline && new Date(request.quoteDeadline) < new Date(Date.now() + 86400000); // 24 hours
+      
+      return (
+        <div className={`flex items-center gap-1 text-xs ${isUrgent ? 'text-red-600' : 'text-orange-600'}`}>
+          {isUrgent ? <AlertTriangle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+          <span>Quote deadline: {format(request.quoteDeadline, 'MMM d, yyyy')}</span>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Get quote information if available
+  const getQuoteInfo = () => {
+    if (request.quotes && request.quotes.length > 0) {
+      return (
+        <div className="mt-2">
+          <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200 hover:bg-indigo-200">
+            {request.quotes.length} quote{request.quotes.length > 1 ? 's' : ''} received
+          </Badge>
         </div>
       );
     }
@@ -78,6 +159,8 @@ export const RequestCard: React.FC<RequestProps> = ({ request }) => {
                   Due: {format(request.dueDate, 'MMM d, yyyy')}
                 </p>
                 {getDeliveryInfo()}
+                {getQuoteDeadlineInfo()}
+                {getQuoteInfo()}
               </div>
               {getStatusBadge(request.status)}
             </div>
@@ -109,7 +192,7 @@ export const RequestCard: React.FC<RequestProps> = ({ request }) => {
       </Card>
 
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{request.title}</DialogTitle>
             <DialogDescription className="flex items-center gap-2">
@@ -120,49 +203,105 @@ export const RequestCard: React.FC<RequestProps> = ({ request }) => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
-            {request.status === 'delivered' && (
-              <div className="bg-teal-50 p-3 rounded-md text-sm flex items-center gap-2">
-                <Check className="h-4 w-4 text-teal-600" />
-                <span>Delivered on {format(request.deliveryDate!, 'MMM d, yyyy')}</span>
-              </div>
-            )}
-            
-            <div>
-              <h4 className="text-sm font-medium mb-2">Items</h4>
-              <ul className="space-y-2">
-                {request.items.map(item => (
-                  <li key={item.id} className="text-sm flex justify-between">
-                    <span>{item.name}</span>
-                    <span className="text-gray-600">{item.quantity} {item.unit}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            {request.notes && (
+          <ScrollArea className="flex-1 pr-4">
+            <div className="space-y-4">
+              {request.status === 'delivered' && (
+                <div className="bg-teal-50 p-3 rounded-md text-sm flex items-center gap-2">
+                  <Check className="h-4 w-4 text-teal-600" />
+                  <span>Delivered on {format(request.deliveryDate!, 'MMM d, yyyy')}</span>
+                </div>
+              )}
+              
+              {/* Display quotes if available and user can approve */}
+              {canApprove && request.quotes && request.quotes.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Quotes</h4>
+                  <div className="space-y-3">
+                    {request.quotes.map((quote, index) => (
+                      <Card key={index} className="p-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium text-sm">{quote.supplierName}</p>
+                            <p className="text-xs text-gray-500">
+                              Delivery: {format(quote.deliveryDate, 'MMM d, yyyy')}
+                            </p>
+                          </div>
+                          <p className="font-medium text-green-700">${quote.totalPrice.toFixed(2)}</p>
+                        </div>
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          className="mt-2 w-full text-xs"
+                          onClick={() => {
+                            toast.success(`Selected quote from ${quote.supplierName}`);
+                            setShowDetails(false);
+                          }}
+                        >
+                          Select Quote
+                        </Button>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               <div>
-                <h4 className="text-sm font-medium mb-2">Notes</h4>
-                <p className="text-sm text-gray-600">{request.notes}</p>
+                <h4 className="text-sm font-medium mb-2">Items</h4>
+                <ul className="space-y-2">
+                  {request.items.map(item => (
+                    <li key={item.id} className="text-sm flex justify-between">
+                      <span>{item.name}</span>
+                      <span className="text-gray-600">{item.quantity} {item.unit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              {request.notes && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Notes</h4>
+                  <p className="text-sm text-gray-600">{request.notes}</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+          
+          <DialogFooter className="pt-2 border-t mt-4">
+            {/* Role-specific actions */}
+            {canApprove && request.status === 'pending' && (
+              <div className="flex gap-2 w-full">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleRejectRequest}
+                  className="w-full"
+                >
+                  Reject
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={handleApproveRequest}
+                  className="w-full"
+                >
+                  Approve & Request Quotes
+                </Button>
               </div>
             )}
-          </div>
-          
-          <DialogFooter className="pt-2">
-            {request.status !== 'delivered' && request.status !== 'rejected' && (
+            
+            {canReceive && request.status === 'ordered' && (
               <Button 
-                variant="outline" 
+                variant="default" 
                 size="sm"
-                onClick={() => {
-                  toast.success(`Marked ${request.title} as delivered`);
-                  setShowDetails(false);
-                }}
+                onClick={handleMarkAsDelivered}
                 className="w-full sm:w-auto"
               >
-                Mark as Delivered
+                Mark as Received
               </Button>
             )}
+            
+            {/* Default close button */}
             <Button 
+              variant={canApprove || canReceive ? "outline" : "default"}
               size="sm"
               onClick={() => setShowDetails(false)}
               className="w-full sm:w-auto"

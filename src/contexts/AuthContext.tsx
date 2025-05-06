@@ -1,8 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-// Define the user roles
-export type UserRole = 'purchasing' | 'chef' | 'receiver' | null;
+import { UserRole, getRolePermissions } from '@/components/chef/requests/types';
 
 // Define the user type
 export interface User {
@@ -19,6 +17,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
+  hasPermission: (permission: keyof ReturnType<typeof getRolePermissions>) => boolean;
 }
 
 // Create the context with default values
@@ -28,6 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: () => {},
   register: async () => {},
+  hasPermission: () => false,
 });
 
 // Create a provider component
@@ -44,6 +44,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const isAuthenticated = !!user;
+
+  // Permission checker based on user role
+  const hasPermission = (permission: keyof ReturnType<typeof getRolePermissions>) => {
+    if (!user || !user.role) return false;
+    const permissions = getRolePermissions(user.role);
+    return permissions[permission];
+  };
 
   // Mock login function - in a real app, you'd call an API
   const login = async (email: string, password: string) => {
@@ -105,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, register }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, register, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );
