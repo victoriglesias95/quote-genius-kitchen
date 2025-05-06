@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -445,11 +444,10 @@ const NewRequestDialog = ({ open, onOpenChange }) => {
     };
     
     // In a real application, this would be sent to a backend API
-    // For demo purposes, we'll just show a toast and close the dialog
     console.log("New request created:", newRequest);
     
     toast.success("Request created successfully");
-    toast.info("The request has been sent to suppliers for quotes");
+    toast.info("Request sent to purchasing department for processing");
     onOpenChange(false);
   };
 
