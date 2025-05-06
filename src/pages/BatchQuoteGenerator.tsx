@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -17,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { sampleSuppliers } from '@/pages/Suppliers';
 import { Request, RequestItem } from '@/components/chef/requests/types';
 import { findSuppliersForProduct, buildSupplierQuoteRequests, aggregateItems, generateSupplierQuoteRequests } from '@/services/supplierProductService';
+import { createQuoteRequest } from '@/services/quoteRequestsService';
 
 const BatchQuoteGenerator = () => {
   const navigate = useNavigate();
