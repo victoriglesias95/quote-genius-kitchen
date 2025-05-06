@@ -1,17 +1,18 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ChefHat, Check, Calendar } from 'lucide-react';
+import { ChefHat, Check, Calendar, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { updateQuoteStatus } from '@/services/quoteRequestsService';
+import { updateQuoteStatus, fetchQuoteItems, QuoteItemWithPrice } from '@/services/quoteRequestsService';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DateSelector } from '@/components/quotes/DateSelector';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface QuoteRequest {
   id: string;
@@ -23,6 +24,8 @@ interface QuoteRequest {
   chefName?: string;
   items: number;
   category: string;
+  isValid?: boolean;
+  validUntil?: Date;
 }
 
 interface QuoteRequestCardProps {
@@ -34,8 +37,9 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
   const [showDetails, setShowDetails] = useState(false);
   const [showPriceEntry, setShowPriceEntry] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [totalPrice, setTotalPrice] = useState('');
   const [validUntil, setValidUntil] = useState<Date>(new Date());
+  const [quoteItems, setQuoteItems] = useState<QuoteItemWithPrice[]>([]);
+  const [isLoadingItems, setIsLoadingItems] = useState(false);
   const navigate = useNavigate();
   
   const handleViewDetails = () => {
@@ -65,16 +69,36 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
     }
   };
 
-  const handleOpenPriceDialog = () => {
+  const handleOpenPriceDialog = async () => {
     if (request.status === 'sent') {
       setShowDetails(false);
-      setShowPriceEntry(true);
+      setIsLoadingItems(true);
+      
+      try {
+        // Fetch items with their current prices
+        const items = await fetchQuoteItems(request.id);
+        setQuoteItems(items);
+        setShowPriceEntry(true);
+      } catch (error) {
+        console.error("Error fetching quote items:", error);
+        toast.error("Failed to load quote items");
+      } finally {
+        setIsLoadingItems(false);
+      }
     } else {
       handleStatusChange();
     }
   };
 
-  const handleStatusChange = async (priceData?: { price: string, validUntil: Date }) => {
+  const updateItemPrice = (itemId: string, price: number) => {
+    setQuoteItems(prevItems => 
+      prevItems.map(item => 
+        item.id === itemId ? { ...item, price } : item
+      )
+    );
+  };
+
+  const handleStatusChange = async (priceData?: { items: { itemId: string, price: number }[], validUntil: Date }) => {
     if (request.status === 'ordered') return;
     
     const newStatus = getNextStatus(request.status);
@@ -99,8 +123,11 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
   };
 
   const handlePriceSubmit = () => {
-    if (!totalPrice || isNaN(parseFloat(totalPrice))) {
-      toast.error('Please enter a valid price');
+    // Validate all prices are entered
+    const missingPrices = quoteItems.some(item => !item.price || isNaN(Number(item.price)));
+    
+    if (missingPrices) {
+      toast.error('Please enter prices for all items');
       return;
     }
 
@@ -110,9 +137,18 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
     }
 
     handleStatusChange({
-      price: totalPrice,
+      items: quoteItems.map(item => ({ 
+        itemId: item.id, 
+        price: Number(item.price) 
+      })),
       validUntil
     });
+  };
+
+  const calculateTotalPrice = () => {
+    return quoteItems.reduce((total, item) => {
+      return total + (Number(item.price) || 0) * Number(item.quantity);
+    }, 0).toFixed(2);
   };
 
   return (
@@ -127,6 +163,21 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
                 <div className="flex items-center gap-1 text-xs mt-1 text-gray-600">
                   <ChefHat className="h-3 w-3" />
                   <span>From {request.chefName || 'kitchen'} request</span>
+                </div>
+              )}
+              {request.status === 'received' && (
+                <div className="flex items-center gap-1 text-xs mt-1">
+                  {request.isValid ? (
+                    <div className="text-green-600 flex items-center">
+                      <Check className="h-3 w-3 mr-1" />
+                      <span>Valid until {request.validUntil ? format(request.validUntil, 'MMM d') : 'N/A'}</span>
+                    </div>
+                  ) : (
+                    <div className="text-red-600 flex items-center">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      <span>Price expired</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -195,10 +246,12 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
             {request.status !== 'ordered' && (
               <Button 
                 onClick={handleOpenPriceDialog}
-                disabled={isProcessing}
+                disabled={isProcessing || isLoadingItems}
                 className="w-full sm:w-auto"
               >
-                {isProcessing ? 'Processing...' : getActionButtonLabel(request.status)}
+                {isProcessing ? 'Processing...' : 
+                 isLoadingItems ? 'Loading Items...' : 
+                 getActionButtonLabel(request.status)}
               </Button>
             )}
             
@@ -217,30 +270,48 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
       <Dialog open={showPriceEntry} onOpenChange={setShowPriceEntry}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Enter Quote Information</DialogTitle>
+            <DialogTitle>Enter Quote Item Prices</DialogTitle>
             <DialogDescription>
-              Please enter the total price and price validity date provided by the supplier.
+              Please enter the price for each item and the price validity date provided by the supplier.
             </DialogDescription>
           </DialogHeader>
           
           <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="total-price">Total Quote Price</Label>
-              <Input
-                id="total-price"
-                type="number"
-                step="0.01"
-                placeholder="Enter the total price"
-                value={totalPrice}
-                onChange={(e) => setTotalPrice(e.target.value)}
+            <ScrollArea className="h-[200px] pr-4">
+              {quoteItems.map((item) => (
+                <div key={item.id} className="mb-4">
+                  <div className="flex justify-between mb-1">
+                    <Label htmlFor={`price-${item.id}`}>{item.name}</Label>
+                    <span className="text-sm text-gray-500">{item.quantity} {item.unit}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">$</span>
+                    <Input
+                      id={`price-${item.id}`}
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter price"
+                      value={item.price || ''}
+                      onChange={(e) => updateItemPrice(item.id, parseFloat(e.target.value))}
+                      className="flex-grow"
+                    />
+                  </div>
+                </div>
+              ))}
+            </ScrollArea>
+            
+            <div className="pt-2 border-t">
+              <div className="flex justify-between mb-4">
+                <span className="font-medium">Total:</span>
+                <span className="font-medium">${calculateTotalPrice()}</span>
+              </div>
+              
+              <DateSelector
+                label="Prices Valid Until"
+                date={validUntil}
+                setDate={setValidUntil}
               />
             </div>
-
-            <DateSelector
-              label="Price Valid Until"
-              date={validUntil}
-              setDate={setValidUntil}
-            />
           </div>
           
           <DialogFooter className="flex flex-col sm:flex-row gap-2">

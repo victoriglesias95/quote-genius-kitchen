@@ -59,6 +59,7 @@ export type Database = {
           created_at: string
           delivery_date: string | null
           id: string
+          is_valid: boolean | null
           request_id: string
           submitted_date: string
           supplier_id: string
@@ -69,6 +70,7 @@ export type Database = {
           created_at?: string
           delivery_date?: string | null
           id?: string
+          is_valid?: boolean | null
           request_id: string
           submitted_date?: string
           supplier_id: string
@@ -79,6 +81,7 @@ export type Database = {
           created_at?: string
           delivery_date?: string | null
           id?: string
+          is_valid?: boolean | null
           request_id?: string
           submitted_date?: string
           supplier_id?: string
@@ -98,6 +101,7 @@ export type Database = {
       request_items: {
         Row: {
           created_at: string
+          default_price: number | null
           id: string
           name: string
           quantity: number
@@ -106,6 +110,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          default_price?: number | null
           id?: string
           name: string
           quantity: number
@@ -114,6 +119,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          default_price?: number | null
           id?: string
           name?: string
           quantity?: number

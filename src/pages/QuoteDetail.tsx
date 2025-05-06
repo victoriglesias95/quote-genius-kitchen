@@ -7,22 +7,23 @@ import { AppSidebar, SidebarToggle } from '@/components/layout/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { ChevronLeft, ChefHat, ClipboardCheck, Calendar } from 'lucide-react';
+import { ChevronLeft, ChefHat, ClipboardCheck, Calendar, Check, AlertTriangle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchQuoteRequestById, updateQuoteStatus } from '@/services/quoteRequestsService';
+import { fetchQuoteRequestById, fetchQuoteItems, updateQuoteStatus, QuoteItemWithPrice } from '@/services/quoteRequestsService';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { DateSelector } from '@/components/quotes/DateSelector';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const QuoteDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPriceDialog, setShowPriceDialog] = useState(false);
-  const [totalPrice, setTotalPrice] = useState('');
   const [validUntil, setValidUntil] = useState<Date>(new Date());
+  const [quoteItems, setQuoteItems] = useState<QuoteItemWithPrice[]>([]);
 
   // Fetch quote request data
   const { 
@@ -36,12 +37,33 @@ const QuoteDetail = () => {
     enabled: !!id,
   });
 
+  // Fetch quote items with prices
+  const { 
+    data: items,
+    isLoading: itemsLoading,
+    error: itemsError
+  } = useQuery({
+    queryKey: ['quoteItems', id],
+    queryFn: () => fetchQuoteItems(id as string),
+    enabled: !!id,
+  });
+
+  // When items are loaded, initialize the state
+  useEffect(() => {
+    if (items) {
+      setQuoteItems([...items]);
+    }
+  }, [items]);
+
   useEffect(() => {
     if (error) {
       toast.error("Failed to load quote details");
       console.error("Error fetching quote details:", error);
     }
-  }, [error]);
+    if (itemsError) {
+      console.error("Error fetching quote items:", itemsError);
+    }
+  }, [error, itemsError]);
 
   const handleBack = () => {
     navigate('/quotes');
@@ -75,7 +97,15 @@ const QuoteDetail = () => {
     }
   };
 
-  const handleStatusChange = async (priceData?: { price: string, validUntil: Date }) => {
+  const updateItemPrice = (itemId: string, price: number) => {
+    setQuoteItems(prevItems => 
+      prevItems.map(item => 
+        item.id === itemId ? { ...item, price } : item
+      )
+    );
+  };
+
+  const handleStatusChange = async (priceData?: { items: { itemId: string, price: number }[], validUntil: Date }) => {
     if (!quote || quote.status === 'ordered') return;
     
     const newStatus = getNextStatus(quote.status);
@@ -95,8 +125,11 @@ const QuoteDetail = () => {
   };
 
   const handlePriceSubmit = () => {
-    if (!totalPrice || isNaN(parseFloat(totalPrice))) {
-      toast.error('Please enter a valid price');
+    // Validate all prices are entered
+    const missingPrices = quoteItems.some(item => !item.price || isNaN(Number(item.price)));
+    
+    if (missingPrices) {
+      toast.error('Please enter prices for all items');
       return;
     }
 
@@ -106,9 +139,18 @@ const QuoteDetail = () => {
     }
 
     handleStatusChange({
-      price: totalPrice,
+      items: quoteItems.map(item => ({ 
+        itemId: item.id, 
+        price: Number(item.price) 
+      })),
       validUntil
     });
+  };
+
+  const calculateTotalPrice = () => {
+    return quoteItems.reduce((total, item) => {
+      return total + (Number(item.price) || 0) * Number(item.quantity);
+    }, 0).toFixed(2);
   };
 
   if (isLoading) {
@@ -182,6 +224,23 @@ const QuoteDetail = () => {
                       <span>From {quote.chefName || 'kitchen'} request</span>
                     </div>
                   )}
+                  
+                  {/* Price validity indicator */}
+                  {quote.status === 'received' && (
+                    <div className="flex items-center gap-1 text-xs">
+                      {quote.isValid ? (
+                        <div className="flex items-center text-green-600">
+                          <Check className="h-3 w-3 mr-1" />
+                          <span>Price valid until {quote.validUntil ? format(quote.validUntil, 'MMM d, yyyy') : 'N/A'}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center text-red-600">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          <span>Price expired</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -216,10 +275,12 @@ const QuoteDetail = () => {
                     <p>{format(quote.dueDate, 'MMMM d, yyyy')}</p>
                   </div>
                   
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Items</h3>
-                    <p>{quote.items} items in this quote</p>
-                  </div>
+                  {quote.status === 'received' && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Total Price</h3>
+                      <p className="font-medium text-lg">${quote.totalPrice?.toFixed(2) || '0.00'}</p>
+                    </div>
+                  )}
                 </div>
               </Card>
               
@@ -257,9 +318,63 @@ const QuoteDetail = () => {
               </Card>
               
               <Card className="p-4 md:col-span-3">
-                <div className="text-center text-gray-500">
-                  <p>Detailed quote items will be displayed here in the future.</p>
-                </div>
+                <h2 className="font-semibold mb-4">Quote Items</h2>
+                {itemsLoading ? (
+                  <div className="flex justify-center p-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                  </div>
+                ) : items && items.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left pb-2">Item</th>
+                          <th className="text-right pb-2">Quantity</th>
+                          <th className="text-right pb-2">Unit</th>
+                          <th className="text-right pb-2">Price</th>
+                          <th className="text-right pb-2">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {items.map((item) => (
+                          <tr key={item.id} className="border-b">
+                            <td className="py-3">{item.name}</td>
+                            <td className="py-3 text-right">{item.quantity}</td>
+                            <td className="py-3 text-right">{item.unit}</td>
+                            <td className="py-3 text-right">
+                              {item.price 
+                                ? `$${Number(item.price).toFixed(2)}`
+                                : quote.isValid === false 
+                                  ? 'N/A'
+                                  : '-'
+                              }
+                            </td>
+                            <td className="py-3 text-right">
+                              {item.price 
+                                ? `$${(Number(item.price) * Number(item.quantity)).toFixed(2)}`
+                                : quote.isValid === false 
+                                  ? 'N/A'
+                                  : '-'
+                              }
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      {quote.status === 'received' && (
+                        <tfoot>
+                          <tr>
+                            <td colSpan={4} className="pt-3 text-right font-medium">Total:</td>
+                            <td className="pt-3 text-right font-medium">${quote.totalPrice?.toFixed(2) || '0.00'}</td>
+                          </tr>
+                        </tfoot>
+                      )}
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 p-4">
+                    <p>No items found for this quote request.</p>
+                  </div>
+                )}
               </Card>
             </div>
           </div>
@@ -270,30 +385,48 @@ const QuoteDetail = () => {
       <Dialog open={showPriceDialog} onOpenChange={setShowPriceDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Enter Quote Information</DialogTitle>
+            <DialogTitle>Enter Quote Item Prices</DialogTitle>
             <DialogDescription>
-              Please enter the total price and price validity date provided by the supplier.
+              Please enter the price for each item and the price validity date provided by the supplier.
             </DialogDescription>
           </DialogHeader>
           
           <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="total-price">Total Quote Price</Label>
-              <Input
-                id="total-price"
-                type="number"
-                step="0.01"
-                placeholder="Enter the total price"
-                value={totalPrice}
-                onChange={(e) => setTotalPrice(e.target.value)}
+            <ScrollArea className="h-[200px] pr-4">
+              {quoteItems.map((item) => (
+                <div key={item.id} className="mb-4">
+                  <div className="flex justify-between mb-1">
+                    <Label htmlFor={`price-${item.id}`}>{item.name}</Label>
+                    <span className="text-sm text-gray-500">{item.quantity} {item.unit}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">$</span>
+                    <Input
+                      id={`price-${item.id}`}
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter price"
+                      value={item.price || ''}
+                      onChange={(e) => updateItemPrice(item.id, parseFloat(e.target.value))}
+                      className="flex-grow"
+                    />
+                  </div>
+                </div>
+              ))}
+            </ScrollArea>
+            
+            <div className="pt-2 border-t">
+              <div className="flex justify-between mb-4">
+                <span className="font-medium">Total:</span>
+                <span className="font-medium">${calculateTotalPrice()}</span>
+              </div>
+              
+              <DateSelector
+                label="Prices Valid Until"
+                date={validUntil}
+                setDate={setValidUntil}
               />
             </div>
-
-            <DateSelector
-              label="Price Valid Until"
-              date={validUntil}
-              setDate={setValidUntil}
-            />
           </div>
           
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
