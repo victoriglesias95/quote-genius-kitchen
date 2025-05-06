@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -16,7 +15,7 @@ import { ArrowLeft, PlusCircle, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sampleSuppliers } from '@/pages/Suppliers';
 import { Request, RequestItem } from '@/components/chef/requests/types';
-import { matchProductsToSuppliers, aggregateItems, generateSupplierQuoteRequests } from '@/services/supplierProductService';
+import { buildSupplierQuoteRequests, aggregateItems, generateSupplierQuoteRequests } from '@/services/supplierProductService';
 
 const BatchQuoteGenerator = () => {
   const navigate = useNavigate();
@@ -57,7 +56,7 @@ const BatchQuoteGenerator = () => {
   const aggregatedItems = aggregateItems(allItems);
   
   // Match products to suppliers
-  const supplierItemsMap = matchProductsToSuppliers(aggregatedItems);
+  const supplierItemsMap = buildSupplierQuoteRequests(aggregatedItems);
   
   // Format for display
   const supplierMatches = Array.from(supplierItemsMap.entries()).map(([supplierId, items]) => {

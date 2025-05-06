@@ -1,6 +1,6 @@
 
 import { Product, Supplier } from '@/components/suppliers/SupplierList';
-import { QuoteRequest, convertChefRequestToQuoteRequest, createQuoteRequest } from './quoteRequestsService';
+import { QuoteRequest, createQuoteRequest } from './quoteRequestsService';
 import { sampleSuppliers } from '@/pages/Suppliers';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,9 +18,10 @@ export const findSuppliersForProduct = (productName: string): Supplier[] => {
 };
 
 /**
- * Find all products that match requested items
+ * Build supplier-specific quote requests based on which suppliers offer which products
+ * Returns a map of supplierId -> items that supplier can provide
  */
-export const matchProductsToSuppliers = (items: RequestItem[]): Map<string, RequestItem[]> => {
+export const buildSupplierQuoteRequests = (items: RequestItem[]): Map<string, RequestItem[]> => {
   // Map to store supplier ID -> matching items
   const supplierItemsMap = new Map<string, RequestItem[]>();
   
@@ -81,7 +82,7 @@ export const generateSupplierQuoteRequests = async (
   category: string
 ): Promise<string[]> => {
   try {
-    const supplierItemsMap = matchProductsToSuppliers(items);
+    const supplierItemsMap = buildSupplierQuoteRequests(items);
     const quoteIds: string[] = [];
     
     // For each supplier that has matching items, create a quote request
