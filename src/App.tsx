@@ -11,6 +11,7 @@ import Suppliers from "./pages/Suppliers";
 import SupplierDetail from "./pages/SupplierDetail";
 import EditSupplier from "./pages/EditSupplier";
 import ProductComparison from "./pages/ProductComparison";
+import ProductDatabasePage from "./pages/ProductDatabase";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/suppliers/:id/edit" element={<EditSupplier />} />
           <Route path="/suppliers/new" element={<EditSupplier />} />
           <Route path="/products/compare" element={<ProductComparison />} />
+          <Route path="/products/database" element={<ProductDatabasePage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

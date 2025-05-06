@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -21,7 +22,8 @@ import {
   BarChart3, 
   Settings, 
   Mail,
-  LayoutGrid
+  LayoutGrid,
+  Database
 } from "lucide-react";
 
 export function AppSidebar() {
@@ -30,6 +32,7 @@ export function AppSidebar() {
   const menuItems = [
     { title: "Dashboard", path: "/", icon: Home },
     { title: "Suppliers", path: "/suppliers", icon: Users },
+    { title: "Product Database", path: "/products/database", icon: Database },
     { title: "Ingredients", path: "/ingredients", icon: Package },
     { title: "Quote Requests", path: "/quotes", icon: FileText },
     { title: "Product Comparison", path: "/products/compare", icon: LayoutGrid },
