@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit } from 'lucide-react';
@@ -33,17 +33,6 @@ const CategoryTabContent: React.FC<CategoryTabContentProps> = ({
   const categoryItems = category === 'all' 
     ? items 
     : items.filter(item => item.category === category);
-    
-  // Automatically trigger edit when a category is selected
-  useEffect(() => {
-    if (category !== 'all') {
-      // Give a small delay to allow UI to render first
-      const timer = setTimeout(() => {
-        onEditCategory(category);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [category, onEditCategory]);
 
   return (
     <Card>
