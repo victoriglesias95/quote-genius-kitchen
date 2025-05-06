@@ -203,10 +203,15 @@ const EditSupplier = () => {
     const newSupplierId = isNewSupplier ? `${Date.now()}` : id;
     
     if (isNewSupplier) {
-      // Add new supplier
+      // Add new supplier - ensure all required fields are included
       const newSupplier: Supplier = {
         id: newSupplierId,
-        ...data,
+        name: data.name,
+        category: data.category,
+        contactPerson: data.contactPerson,
+        email: data.email,
+        phone: data.phone,
+        status: data.status,
         products: products.map(p => ({
           ...p,
           id: p.id.startsWith('new') ? `${newSupplierId}-${Date.now()}-${p.name}` : p.id
@@ -578,4 +583,3 @@ const EditSupplier = () => {
 };
 
 export default EditSupplier;
-
