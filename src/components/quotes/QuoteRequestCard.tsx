@@ -4,11 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ChefHat, Check } from 'lucide-react';
+import { ChefHat, Check, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { updateQuoteStatus } from '@/services/quoteRequestsService';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { DateSelector } from '@/components/quotes/DateSelector';
 
 interface QuoteRequest {
   id: string;
@@ -29,7 +32,10 @@ interface QuoteRequestCardProps {
 
 export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [showPriceEntry, setShowPriceEntry] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [totalPrice, setTotalPrice] = useState('');
+  const [validUntil, setValidUntil] = useState<Date>(new Date());
   const navigate = useNavigate();
   
   const handleViewDetails = () => {
@@ -59,14 +65,23 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
     }
   };
 
-  const handleStatusChange = async () => {
+  const handleOpenPriceDialog = () => {
+    if (request.status === 'sent') {
+      setShowDetails(false);
+      setShowPriceEntry(true);
+    } else {
+      handleStatusChange();
+    }
+  };
+
+  const handleStatusChange = async (priceData?: { price: string, validUntil: Date }) => {
     if (request.status === 'ordered') return;
     
     const newStatus = getNextStatus(request.status);
     setIsProcessing(true);
     
     try {
-      await updateQuoteStatus(request.id, newStatus);
+      await updateQuoteStatus(request.id, newStatus, priceData);
       toast.success(`Quote ${request.title} marked as ${newStatus}`);
       
       if (onStatusChange) {
@@ -74,12 +89,30 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
       }
       
       setShowDetails(false);
+      setShowPriceEntry(false);
     } catch (error) {
       console.error('Error updating quote status:', error);
       toast.error('Failed to update quote status');
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handlePriceSubmit = () => {
+    if (!totalPrice || isNaN(parseFloat(totalPrice))) {
+      toast.error('Please enter a valid price');
+      return;
+    }
+
+    if (!validUntil) {
+      toast.error('Please select a valid until date');
+      return;
+    }
+
+    handleStatusChange({
+      price: totalPrice,
+      validUntil
+    });
   };
 
   return (
@@ -119,6 +152,7 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
         </div>
       </Card>
 
+      {/* Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -160,7 +194,7 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
             {request.status !== 'ordered' && (
               <Button 
-                onClick={handleStatusChange}
+                onClick={handleOpenPriceDialog}
                 disabled={isProcessing}
                 className="w-full sm:w-auto"
               >
@@ -174,6 +208,56 @@ export const QuoteRequestCard = ({ request, onStatusChange }: QuoteRequestCardPr
               className="w-full sm:w-auto"
             >
               View Full Details
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Price Entry Dialog */}
+      <Dialog open={showPriceEntry} onOpenChange={setShowPriceEntry}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enter Quote Information</DialogTitle>
+            <DialogDescription>
+              Please enter the total price and price validity date provided by the supplier.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="total-price">Total Quote Price</Label>
+              <Input
+                id="total-price"
+                type="number"
+                step="0.01"
+                placeholder="Enter the total price"
+                value={totalPrice}
+                onChange={(e) => setTotalPrice(e.target.value)}
+              />
+            </div>
+
+            <DateSelector
+              label="Price Valid Until"
+              date={validUntil}
+              setDate={setValidUntil}
+            />
+          </div>
+          
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              onClick={handlePriceSubmit}
+              disabled={isProcessing}
+              className="w-full sm:w-auto"
+            >
+              {isProcessing ? 'Processing...' : 'Save and Mark as Received'}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={() => setShowPriceEntry(false)}
+              className="w-full sm:w-auto"
+            >
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>

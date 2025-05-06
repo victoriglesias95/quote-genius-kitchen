@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Request } from "@/components/chef/requests/types";
 import { toast } from "sonner";
@@ -208,7 +209,8 @@ export const createQuoteRequest = async (
 // Update quote status
 export const updateQuoteStatus = async (
   quoteId: string,
-  newStatus: string
+  newStatus: string,
+  priceData?: { price: string; validUntil: Date }
 ): Promise<void> => {
   try {
     // First, get the request_id associated with this quote
@@ -221,6 +223,22 @@ export const updateQuoteStatus = async (
     if (quoteError) {
       console.error("Error fetching quote:", quoteError);
       throw new Error(quoteError.message);
+    }
+
+    // Update the quote with price data if provided (when moving from sent to received)
+    if (newStatus === 'received' && priceData) {
+      const { error: updateQuoteError } = await supabase
+        .from('quotes')
+        .update({
+          total_price: parseFloat(priceData.price),
+          delivery_date: priceData.validUntil.toISOString()
+        })
+        .eq('id', quoteId);
+      
+      if (updateQuoteError) {
+        console.error("Error updating quote price data:", updateQuoteError);
+        throw new Error(updateQuoteError.message);
+      }
     }
     
     // Then update the status of the request
