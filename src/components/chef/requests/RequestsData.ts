@@ -1,6 +1,8 @@
 
 // Sample request data
-export const sampleRequests = [
+import { Request, RequestItem } from './types';
+
+export const sampleRequests: Request[] = [
   {
     id: 'req-1',
     title: 'Weekly Produce Order',
@@ -11,7 +13,8 @@ export const sampleRequests = [
       { id: 'item-1', name: 'Tomatoes', quantity: 10, unit: 'kg' },
       { id: 'item-2', name: 'Lettuce', quantity: 15, unit: 'heads' },
       { id: 'item-3', name: 'Carrots', quantity: 8, unit: 'kg' }
-    ]
+    ],
+    quotes: []
   },
   {
     id: 'req-2',
@@ -22,7 +25,8 @@ export const sampleRequests = [
     items: [
       { id: 'item-4', name: 'Beef Sirloin', quantity: 20, unit: 'kg' },
       { id: 'item-5', name: 'Chicken Breast', quantity: 15, unit: 'kg' }
-    ]
+    ],
+    quotes: []
   },
   {
     id: 'req-3',
@@ -34,7 +38,8 @@ export const sampleRequests = [
       { id: 'item-6', name: 'Milk', quantity: 20, unit: 'liters' },
       { id: 'item-7', name: 'Cheese', quantity: 5, unit: 'kg' },
       { id: 'item-8', name: 'Yogurt', quantity: 30, unit: 'cups' }
-    ]
+    ],
+    quotes: []
   },
   {
     id: 'req-4',
@@ -46,7 +51,8 @@ export const sampleRequests = [
       { id: 'item-9', name: 'Rice', quantity: 25, unit: 'kg' },
       { id: 'item-10', name: 'Flour', quantity: 15, unit: 'kg' },
       { id: 'item-11', name: 'Sugar', quantity: 10, unit: 'kg' }
-    ]
+    ],
+    quotes: []
   },
   {
     id: 'req-5',
@@ -57,12 +63,13 @@ export const sampleRequests = [
     items: [
       { id: 'item-12', name: 'Saffron', quantity: 100, unit: 'g' },
       { id: 'item-13', name: 'Truffle Oil', quantity: 5, unit: 'bottles' }
-    ]
+    ],
+    quotes: []
   }
 ];
 
 // Add delivered requests
-export const deliveredRequests = [
+export const deliveredRequests: Request[] = [
   {
     id: 'req-6',
     title: 'Weekly Seafood Order',
@@ -73,7 +80,8 @@ export const deliveredRequests = [
     items: [
       { id: 'item-14', name: 'Salmon', quantity: 15, unit: 'kg' },
       { id: 'item-15', name: 'Shrimp', quantity: 7, unit: 'kg' }
-    ]
+    ],
+    quotes: []
   },
   {
     id: 'req-7',
@@ -85,7 +93,8 @@ export const deliveredRequests = [
     items: [
       { id: 'item-16', name: 'Pasta', quantity: 25, unit: 'kg' },
       { id: 'item-17', name: 'Canned Tomatoes', quantity: 40, unit: 'cans' }
-    ]
+    ],
+    quotes: []
   }
 ];
 
@@ -104,4 +113,4 @@ export const sampleInventory = [
 ];
 
 // Combine all requests
-export const allRequests = [...sampleRequests, ...deliveredRequests];
+export const allRequests: Request[] = [...sampleRequests, ...deliveredRequests];
