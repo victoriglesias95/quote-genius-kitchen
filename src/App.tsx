@@ -6,6 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 
 // Pages
 import Index from '@/pages/Index';
+import Dashboard from '@/pages/Dashboard';
 import Quotes from '@/pages/Quotes';
 import NewQuoteRequest from '@/pages/NewQuoteRequest';
 import QuoteDetail from '@/pages/QuoteDetail';
@@ -42,6 +43,7 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Index />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
