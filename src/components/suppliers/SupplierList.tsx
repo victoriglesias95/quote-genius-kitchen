@@ -4,6 +4,14 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
+export interface Product {
+  id: string;
+  name: string;
+  category: string;
+  unit: string;
+  defaultPrice?: number;
+}
+
 export interface Supplier {
   id: string;
   name: string;
@@ -12,6 +20,7 @@ export interface Supplier {
   email: string;
   phone: string;
   status: 'active' | 'inactive';
+  products: Product[];
 }
 
 interface SupplierListProps {
