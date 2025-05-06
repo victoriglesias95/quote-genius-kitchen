@@ -10,6 +10,7 @@ import NewQuoteRequest from "./pages/NewQuoteRequest";
 import Suppliers from "./pages/Suppliers";
 import SupplierDetail from "./pages/SupplierDetail";
 import EditSupplier from "./pages/EditSupplier";
+import ProductComparison from "./pages/ProductComparison";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/suppliers/:id" element={<SupplierDetail />} />
           <Route path="/suppliers/:id/edit" element={<EditSupplier />} />
           <Route path="/suppliers/new" element={<EditSupplier />} />
+          <Route path="/products/compare" element={<ProductComparison />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
