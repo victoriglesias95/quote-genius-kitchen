@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar, SidebarToggle } from '@/components/layout/Sidebar';
@@ -64,6 +65,64 @@ export const sampleSuppliers: Supplier[] = [
       { id: '401', name: 'Organic Milk', category: 'Milk', unit: 'liter', defaultPrice: 3.79 },
       { id: '402', name: 'Cheese', category: 'Cheese', unit: 'kg', defaultPrice: 14.99 },
       { id: '403', name: 'Yogurt', category: 'Yogurt', unit: 'kg', defaultPrice: 6.49 }
+    ]
+  },
+  {
+    id: '5',
+    name: 'Green Valley Farms',
+    category: 'Produce',
+    contactPerson: 'Thomas Green',
+    email: 'thomas@greenvalley.com',
+    phone: '(555) 567-8901',
+    status: 'active',
+    products: [
+      { id: '501', name: 'Organic Apples', category: 'Fruits', unit: 'kg', defaultPrice: 4.29 },
+      { id: '502', name: 'Carrots', category: 'Vegetables', unit: 'kg', defaultPrice: 2.29 },
+      { id: '503', name: 'Lettuce', category: 'Vegetables', unit: 'each', defaultPrice: 2.19 },
+      { id: '504', name: 'Tomatoes', category: 'Vegetables', unit: 'kg', defaultPrice: 3.99 }
+    ]
+  },
+  {
+    id: '6',
+    name: 'Ocean Fresh Seafood',
+    category: 'Seafood',
+    contactPerson: 'Lisa Chen',
+    email: 'lisa@oceanfresh.com',
+    phone: '(555) 678-9012',
+    status: 'active',
+    products: [
+      { id: '601', name: 'Fresh Salmon', category: 'Fish', unit: 'kg', defaultPrice: 21.50 },
+      { id: '602', name: 'Shrimp', category: 'Shellfish', unit: 'kg', defaultPrice: 23.99 },
+      { id: '603', name: 'Cod Fillets', category: 'Fish', unit: 'kg', defaultPrice: 14.85 }
+    ]
+  },
+  {
+    id: '7',
+    name: 'Premium Meats & Poultry',
+    category: 'Meat',
+    contactPerson: 'David Martinez',
+    email: 'david@premiummeats.com',
+    phone: '(555) 789-0123',
+    status: 'active',
+    products: [
+      { id: '701', name: 'Beef Sirloin', category: 'Beef', unit: 'kg', defaultPrice: 19.99 },
+      { id: '702', name: 'Chicken Breast', category: 'Poultry', unit: 'kg', defaultPrice: 8.99 },
+      { id: '703', name: 'Pork Chops', category: 'Pork', unit: 'kg', defaultPrice: 11.99 },
+      { id: '704', name: 'Ground Beef', category: 'Beef', unit: 'kg', defaultPrice: 10.99 }
+    ]
+  },
+  {
+    id: '8',
+    name: 'Local Dairy Farms',
+    category: 'Dairy',
+    contactPerson: 'Amanda Wilson',
+    email: 'amanda@localdairy.com',
+    phone: '(555) 890-1234',
+    status: 'active',
+    products: [
+      { id: '801', name: 'Organic Milk', category: 'Milk', unit: 'liter', defaultPrice: 3.49 },
+      { id: '802', name: 'Cheese', category: 'Cheese', unit: 'kg', defaultPrice: 13.50 },
+      { id: '803', name: 'Yogurt', category: 'Yogurt', unit: 'kg', defaultPrice: 5.99 }
     ]
   }
 ];
