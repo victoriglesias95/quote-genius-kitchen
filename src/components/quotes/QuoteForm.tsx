@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
-import { toast } from 'sonner';
+import { toast as sonnerToast } from 'sonner';
 import { ItemsList, ItemType } from './ItemsList';
 import { DateSelector } from './DateSelector';
 import { SupplierSelector } from './SupplierSelector';
@@ -116,7 +115,7 @@ export function QuoteForm({ chefRequestId, chefRequestData }: QuoteFormProps) {
     });
     
     // Show a success toast and redirect to the quotes page
-    toast.success("Quote request submitted successfully");
+    sonnerToast.success("Quote request submitted successfully");
     
     // Redirect back to quotes page
     setTimeout(() => {
