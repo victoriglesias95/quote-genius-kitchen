@@ -5,7 +5,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar, SidebarToggle } from '@/components/layout/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus } from 'lucide-react';
+import { Plus, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { QuoteRequestsList } from '@/components/quotes/QuoteRequestsList';
@@ -56,10 +56,16 @@ const Quotes = () => {
                 <p className="text-dark-gray">Manage and track quote requests with suppliers</p>
               </div>
               {hasPermission('canPlaceOrder') && (
-                <Button onClick={() => navigate('/quotes/new')} className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  <span>New Quote Request</span>
-                </Button>
+                <div className="flex space-x-2">
+                  <Button onClick={() => navigate('/quotes/new')} className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    <span>New Quote Request</span>
+                  </Button>
+                  <Button onClick={() => navigate('/quotes/batch')} variant="outline" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    <span>Batch Generator</span>
+                  </Button>
+                </div>
               )}
             </div>
             

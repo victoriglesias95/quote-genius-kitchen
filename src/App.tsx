@@ -1,175 +1,74 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Pages
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import NewQuoteRequest from "./pages/NewQuoteRequest";
-import Quotes from "./pages/Quotes";
-import Suppliers from "./pages/Suppliers";
-import SupplierDetail from "./pages/SupplierDetail";
-import EditSupplier from "./pages/EditSupplier";
-import SupplierProducts from "./pages/SupplierProducts";
-import ProductComparison from "./pages/ProductComparison";
-import ProductDatabasePage from "./pages/ProductDatabase";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Index from '@/pages/Index';
+import Quotes from '@/pages/Quotes';
+import NewQuoteRequest from '@/pages/NewQuoteRequest';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import NotFound from '@/pages/NotFound';
+import Suppliers from '@/pages/Suppliers';
+import SupplierDetail from '@/pages/SupplierDetail';
+import EditSupplier from '@/pages/EditSupplier';
+import SupplierProducts from '@/pages/SupplierProducts';
+import Requests from '@/pages/chef/Requests';
+import Inventory from '@/pages/chef/Inventory';
+import Settings from '@/pages/admin/Settings';
+import UserManagement from '@/pages/admin/UserManagement';
+import BatchQuoteGenerator from '@/pages/BatchQuoteGenerator';
 
-// Chef Pages
-import Inventory from "./pages/chef/Inventory";
-import Requests from "./pages/chef/Requests";
+// Create a client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-// Admin Pages
-import UserManagement from "./pages/admin/UserManagement";
-import Settings from "./pages/admin/Settings";
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        {/* Removed BrowserRouter from here as it's already in main.tsx */}
-        <Routes>
-          {/* Auth Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          {/* Redirect root to appropriate page */}
-          <Route path="/" element={<Navigate to="/login" />} />
-
-          {/* Purchasing Department Routes */}
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                <Index />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/quotes" 
-            element={
-              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                <Quotes />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/quotes/new" 
-            element={
-              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                <NewQuoteRequest />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/suppliers" 
-            element={
-              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                <Suppliers />
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/suppliers/:id" 
-            element={
-              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                <SupplierDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/suppliers/:id/edit" 
-            element={
-              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                <EditSupplier />
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/suppliers/:id/products" 
-            element={
-              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                <SupplierProducts />
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/suppliers/new" 
-            element={
-              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                <EditSupplier />
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/products/compare" 
-            element={
-              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                <ProductComparison />
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/products/database" 
-            element={
-              <ProtectedRoute allowedRoles={['purchasing', 'admin']}>
-                <ProductDatabasePage />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Chef Routes */}
-          <Route 
-            path="/chef/inventory" 
-            element={
-              <ProtectedRoute allowedRoles={['chef', 'admin']}>
-                <Inventory />
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/chef/requests" 
-            element={
-              <ProtectedRoute allowedRoles={['chef', 'admin']}>
-                <Requests />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Admin Routes */}
-          <Route 
-            path="/admin/users" 
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <UserManagement />
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/admin/settings" 
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Settings />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Catch-All Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+            {/* Quote Routes */}
+            <Route path="/quotes" element={<Quotes />} />
+            <Route path="/quotes/new" element={<NewQuoteRequest />} />
+            <Route path="/quotes/batch" element={<BatchQuoteGenerator />} />
+            
+            {/* Supplier Routes */}
+            <Route path="/suppliers" element={<Suppliers />} />
+            <Route path="/suppliers/:id" element={<SupplierDetail />} />
+            <Route path="/suppliers/:id/edit" element={<EditSupplier />} />
+            <Route path="/suppliers/:id/products" element={<SupplierProducts />} />
+            
+            {/* Chef Routes */}
+            <Route path="/chef/requests" element={<Requests />} />
+            <Route path="/chef/inventory" element={<Inventory />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/settings" element={<Settings />} />
+            <Route path="/admin/users" element={<UserManagement />} />
+            
+            {/* 404 Route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+        <Toaster position="top-right" />
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
