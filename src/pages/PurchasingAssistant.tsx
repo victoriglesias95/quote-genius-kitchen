@@ -25,11 +25,8 @@ import {
   DialogDescription, 
   DialogFooter, 
   DialogHeader, 
-  DialogTitle, 
-  DialogTabs, 
-  DialogTabsContent, 
-  DialogTabsList, 
-  DialogTabsTrigger 
+  DialogTitle,
+  DialogClose
 } from '@/components/ui/dialog';
 import { 
   Tabs, 
@@ -45,6 +42,8 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertTriangle, CheckCircle, AlertCircle, Info, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -236,7 +235,6 @@ const PurchasingAssistant = () => {
                 <OrderCoverageSummary 
                   selectedItems={selectedItems} 
                   chefRequests={chefRequests}
-                  skippedItems={skippedItems.map(s => s.item)}
                 />
                 
                 <MissingItemsAlert 
@@ -342,7 +340,7 @@ const PurchasingAssistant = () => {
               {/* Validation warnings */}
               {hasValidationIssues && (
                 <div className="mt-4">
-                  <Alert className="bg-amber-50 border-amber-200 text-amber-800">
+                  <Alert variant="default" className="bg-amber-50 border-amber-200 text-amber-800">
                     <AlertTriangle className="h-4 w-4 text-amber-600" />
                     <AlertTitle>Validation Issues</AlertTitle>
                     <AlertDescription>
@@ -356,7 +354,7 @@ const PurchasingAssistant = () => {
               {/* Missing items summary */}
               {skippedItems.length > 0 && (
                 <div className="mt-4">
-                  <Alert className="bg-blue-50 border-blue-200 text-blue-800">
+                  <Alert variant="default" className="bg-blue-50 border-blue-200 text-blue-800">
                     <Info className="h-4 w-4 text-blue-600" />
                     <AlertTitle>Skipped Items</AlertTitle>
                     <AlertDescription>
@@ -385,7 +383,7 @@ const PurchasingAssistant = () => {
                         </div>
                         
                         {group.isSmallOrder && (
-                          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
+                          <Badge variant="outline" className="bg-amber-100 text-amber-800 hover:bg-amber-100">
                             Small Order
                           </Badge>
                         )}
@@ -394,7 +392,7 @@ const PurchasingAssistant = () => {
                     <CardContent>
                       {/* Validation issues for this supplier */}
                       {supplierValidationIssues.length > 0 && (
-                        <Alert className="mb-4 bg-amber-50 border-amber-200 text-amber-800">
+                        <Alert variant="default" className="mb-4 bg-amber-50 border-amber-200 text-amber-800">
                           <AlertTriangle className="h-4 w-4 text-amber-600" />
                           <AlertTitle>Validation Issues</AlertTitle>
                           <AlertDescription>
@@ -491,3 +489,4 @@ const PurchasingAssistant = () => {
 };
 
 export default PurchasingAssistant;
+

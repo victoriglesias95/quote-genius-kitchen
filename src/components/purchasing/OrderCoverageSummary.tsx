@@ -1,97 +1,86 @@
 
-import React, { useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { SelectedQuoteItem, findMissingItems } from '@/services/purchasingService';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SelectedQuoteItem } from '@/services/purchasingService';
 import { Request } from '@/components/chef/requests/types';
-import { Progress } from '@/components/ui/progress';
 
-interface OrderCoverageSummaryProps {
+export interface OrderCoverageSummaryProps {
   selectedItems: SelectedQuoteItem[];
   chefRequests: Request[];
 }
 
 export function OrderCoverageSummary({ selectedItems, chefRequests }: OrderCoverageSummaryProps) {
   // Calculate coverage metrics
-  const metrics = useMemo(() => {
-    // Count total items from chef requests
-    const totalRequestedItems = chefRequests.reduce((total, request) => {
-      return total + request.items.length;
-    }, 0);
+  const metrics = React.useMemo(() => {
+    // Count total unique products requested
+    const requestedProductsSet = new Set<string>();
+    chefRequests.forEach(request => {
+      request.items.forEach(item => {
+        requestedProductsSet.add(`${item.name}-${request.id}`);
+      });
+    });
     
-    // Find missing items
-    const missingItems = findMissingItems(selectedItems, chefRequests);
-    const missingCount = missingItems.length;
+    const totalRequestedProducts = requestedProductsSet.size;
+    
+    // Count covered products
+    const coveredProductsSet = new Set<string>();
+    selectedItems.forEach(item => {
+      coveredProductsSet.add(`${item.itemName}-${item.requestId}`);
+    });
+    
+    const coveredProducts = coveredProductsSet.size;
     
     // Calculate coverage percentage
-    const coveredCount = totalRequestedItems - missingCount;
-    const coveragePercentage = totalRequestedItems > 0 
-      ? Math.round((coveredCount / totalRequestedItems) * 100) 
+    const coveragePercentage = totalRequestedProducts > 0 
+      ? (coveredProducts / totalRequestedProducts) * 100 
       : 0;
     
-    // Calculate total value of selected items
-    const totalValue = selectedItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    // Count suppliers
+    const suppliersSet = new Set<string>();
+    selectedItems.forEach(item => {
+      suppliersSet.add(item.supplierId);
+    });
     
-    // Count unique suppliers
-    const uniqueSuppliers = new Set(selectedItems.map(item => item.supplierId)).size;
+    const supplierCount = suppliersSet.size;
     
     return {
-      totalRequestedItems,
-      coveredCount,
-      missingCount,
+      totalRequestedProducts,
+      coveredProducts,
       coveragePercentage,
-      totalValue,
-      uniqueSuppliers
+      supplierCount
     };
   }, [selectedItems, chefRequests]);
-  
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {/* Coverage Progress */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center mb-2">
-            <p className="text-sm font-medium text-gray-500">Coverage</p>
-            <h3 className="text-3xl font-bold">{metrics.coveragePercentage}%</h3>
+    <Card>
+      <CardHeader>
+        <CardTitle>Order Coverage Summary</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm text-gray-600">Total Requested Items</div>
+            <div className="text-2xl font-bold mt-1">{metrics.totalRequestedProducts}</div>
           </div>
-          <Progress value={metrics.coveragePercentage} className="h-2" />
-          <div className="flex justify-between text-xs text-gray-500 mt-2">
-            <span>{metrics.coveredCount} covered</span>
-            <span>{metrics.missingCount} missing</span>
+          
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm text-gray-600">Items Covered</div>
+            <div className="text-2xl font-bold mt-1">{metrics.coveredProducts}</div>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Total Items */}
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-sm font-medium text-gray-500">Total Items</p>
-          <div className="flex items-baseline mt-1">
-            <h3 className="text-3xl font-bold">{metrics.totalRequestedItems}</h3>
-            <span className="ml-2 text-sm text-gray-500">across all requests</span>
+          
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm text-gray-600">Coverage Percentage</div>
+            <div className="text-2xl font-bold mt-1">
+              {metrics.coveragePercentage.toFixed(1)}%
+            </div>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Total Value */}
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-sm font-medium text-gray-500">Total Value</p>
-          <div className="flex items-baseline mt-1">
-            <h3 className="text-3xl font-bold">${metrics.totalValue.toFixed(2)}</h3>
+          
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm text-gray-600">Suppliers Used</div>
+            <div className="text-2xl font-bold mt-1">{metrics.supplierCount}</div>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Suppliers */}
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-sm font-medium text-gray-500">Suppliers</p>
-          <div className="flex items-baseline mt-1">
-            <h3 className="text-3xl font-bold">{metrics.uniqueSuppliers}</h3>
-            <span className="ml-2 text-sm text-gray-500">providing items</span>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
