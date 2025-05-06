@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileText } from 'lucide-react';
@@ -22,7 +22,21 @@ interface QuoteRequestsListProps {
 }
 
 export const QuoteRequestsList = ({ quotes }: QuoteRequestsListProps) => {
-  if (quotes.length === 0) {
+  const [updatedQuotes, setUpdatedQuotes] = useState<QuoteRequest[]>(quotes);
+  
+  React.useEffect(() => {
+    setUpdatedQuotes(quotes);
+  }, [quotes]);
+  
+  const handleStatusChange = (id: string, newStatus: string) => {
+    setUpdatedQuotes(currentQuotes => 
+      currentQuotes.map(quote => 
+        quote.id === id ? { ...quote, status: newStatus } : quote
+      )
+    );
+  };
+
+  if (updatedQuotes.length === 0) {
     return (
       <Card className="p-8 text-center">
         <CardContent>
@@ -37,8 +51,12 @@ export const QuoteRequestsList = ({ quotes }: QuoteRequestsListProps) => {
   return (
     <ScrollArea className="h-full max-h-[calc(100vh-280px)]">
       <div className="space-y-4">
-        {quotes.map(quote => (
-          <QuoteRequestCard key={quote.id} request={quote} />
+        {updatedQuotes.map(quote => (
+          <QuoteRequestCard 
+            key={quote.id} 
+            request={quote} 
+            onStatusChange={handleStatusChange}
+          />
         ))}
       </div>
     </ScrollArea>

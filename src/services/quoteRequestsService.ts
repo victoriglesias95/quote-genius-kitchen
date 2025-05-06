@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Request } from "@/components/chef/requests/types";
 import { toast } from "sonner";
@@ -202,6 +201,40 @@ export const createQuoteRequest = async (
     return newQuote.id;
   } catch (error) {
     console.error("Failed to create quote request:", error);
+    throw error;
+  }
+};
+
+// Update quote status
+export const updateQuoteStatus = async (
+  quoteId: string,
+  newStatus: string
+): Promise<void> => {
+  try {
+    // First, get the request_id associated with this quote
+    const { data: quote, error: quoteError } = await supabase
+      .from('quotes')
+      .select('request_id')
+      .eq('id', quoteId)
+      .single();
+    
+    if (quoteError) {
+      console.error("Error fetching quote:", quoteError);
+      throw new Error(quoteError.message);
+    }
+    
+    // Then update the status of the request
+    const { error: updateError } = await supabase
+      .from('requests')
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq('id', quote.request_id);
+    
+    if (updateError) {
+      console.error("Error updating request status:", updateError);
+      throw new Error(updateError.message);
+    }
+  } catch (error) {
+    console.error("Failed to update quote status:", error);
     throw error;
   }
 };
