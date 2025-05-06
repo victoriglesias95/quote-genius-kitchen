@@ -150,106 +150,93 @@ export function SupplierOrderMapping({
 
   if (selectedItems.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Supplier Orders</CardTitle>
-          <CardDescription>
-            No items have been selected for ordering yet
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="text-center p-8 border-2 border-dashed rounded-lg border-gray-200">
+        <p className="text-muted-foreground">No items have been selected for ordering yet</p>
+      </div>
     );
   }
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Supplier Orders</CardTitle>
-          <CardDescription>
-            Items grouped by supplier for ordering
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {supplierGroups.map((group) => (
-              <div key={group.supplierId} className="border rounded-lg overflow-hidden">
-                <div className="bg-gray-50 px-4 py-3 border-b">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium">{group.supplierName}</h3>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">
-                        ${group.totalValue.toFixed(2)}
-                      </Badge>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleOpenAddItemDialog(group.supplierId, group.supplierName)}
-                        className="h-8 px-2 flex items-center text-blue-600 border-blue-200 hover:bg-blue-50"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Add Item
-                      </Button>
-                    </div>
-                  </div>
+      <div className="space-y-4">
+        {supplierGroups.map((group) => (
+          <Card key={group.supplierId} className="overflow-hidden shadow-sm hover:shadow transition-shadow duration-200">
+            <CardHeader className="bg-gray-50 py-3">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="text-lg font-medium">{group.supplierName}</CardTitle>
+                  <CardDescription className="text-sm">
+                    {group.items.length} items • ${group.totalValue.toFixed(2)} total
+                  </CardDescription>
                 </div>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Item</TableHead>
-                        <TableHead>Quantity</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
-                        <TableHead className="w-[80px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {group.items.map(item => (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center">
-                              <span>{item.itemName}</span>
-                              {manuallySelectedItems[item.id] && (
-                                <div className="ml-2" title="Manually selected">
-                                  <AlertTriangle className="h-3 w-3 text-amber-500" />
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{item.quantity} {item.unit}</TableCell>
-                          <TableCell>${item.price.toFixed(2)}</TableCell>
-                          <TableCell className="text-right">${item.totalPrice.toFixed(2)}</TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleOpenEditQuantityDialog(item)}
-                              className="h-7 w-7 p-0"
-                              title="Edit Quantity"
-                            >
-                              <Edit className="h-3.5 w-3.5 text-gray-500" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow>
-                        <TableCell colSpan={3} className="font-medium text-right">
-                          Total:
-                        </TableCell>
-                        <TableCell className="text-right font-bold">
-                          ${group.totalValue.toFixed(2)}
-                        </TableCell>
-                        <TableCell></TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleOpenAddItemDialog(group.supplierId, group.supplierName)}
+                  className="h-8 px-3 flex items-center gap-1"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add Item
+                </Button>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="w-[60px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {group.items.map(item => (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <span className="font-medium">{item.itemName}</span>
+                            {manuallySelectedItems[item.id] && (
+                              <Badge variant="outline" className="ml-2 bg-amber-50 text-amber-700 text-xs py-0 px-1.5">
+                                Manual
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{item.quantity} {item.unit}</TableCell>
+                        <TableCell>${item.price.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-medium">${item.totalPrice.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenEditQuantityDialog(item)}
+                            className="h-7 w-7 p-0"
+                            title="Edit Quantity"
+                          >
+                            <Edit className="h-3.5 w-3.5 text-gray-500" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow>
+                      <TableCell colSpan={3} className="font-medium text-right border-t">
+                        Total:
+                      </TableCell>
+                      <TableCell className="text-right font-bold border-t">
+                        ${group.totalValue.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="border-t"></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
       
       {/* Add Item Dialog */}
       <Dialog open={isAddItemDialogOpen} onOpenChange={setIsAddItemDialogOpen}>
@@ -257,7 +244,7 @@ export function SupplierOrderMapping({
           <DialogHeader>
             <DialogTitle>Add Item to {currentSupplierName}</DialogTitle>
             <DialogDescription>
-              Add a new item to the supplier's order. This will be marked as a manual addition.
+              Add a new item to the supplier's order.
             </DialogDescription>
           </DialogHeader>
           

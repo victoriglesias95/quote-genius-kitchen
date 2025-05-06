@@ -129,9 +129,7 @@ const PurchasingAssistant = () => {
       };
       
       // Store in localStorage and return the new item
-      await storeManuallyAddedItem(newItem);
-      
-      return newItem;
+      return await storeManuallyAddedItem(newItem);
     },
     onSuccess: (newItem) => {
       // Update local state to immediately reflect the added item
@@ -159,26 +157,29 @@ const PurchasingAssistant = () => {
   // Handle manually adding a new item
   const handleAddManualItem = useCallback((item: SelectedQuoteItem) => {
     // First store in localStorage
-    storeManuallyAddedItem(item)
-      .then(() => {
+    const addItemPromise = async () => {
+      try {
+        const storedItem = await storeManuallyAddedItem(item);
         // Then update local state
-        setLocallyAddedItems(prev => [...prev, item]);
+        setLocallyAddedItems(prev => [...prev, storedItem]);
         
         // Track as manually selected
         setManuallySelectedItems(prev => ({
           ...prev,
-          [item.id]: true
+          [storedItem.id]: true
         }));
         
         // Refresh validation
         setTimeout(() => {
           refetchValidation();
         }, 100);
-      })
-      .catch(error => {
+      } catch (error) {
         toast.error("Failed to add manual item");
         console.error(error);
-      });
+      }
+    };
+    
+    addItemPromise();
   }, [refetchValidation]);
 
   // Handle updating an item's quantity
@@ -216,11 +217,16 @@ const PurchasingAssistant = () => {
       // Update localStorage with the changed item
       const updatedItem = updatedLocalItems.find(localItem => localItem.id === item.id);
       if (updatedItem) {
-        storeManuallyAddedItem(updatedItem)
-          .catch(error => {
+        const updateStoragePromise = async () => {
+          try {
+            await storeManuallyAddedItem(updatedItem);
+          } catch (error) {
             toast.error("Failed to update item in storage");
             console.error(error);
-          });
+          }
+        };
+        
+        updateStoragePromise();
       }
       
       // Update state
@@ -238,10 +244,11 @@ const PurchasingAssistant = () => {
         };
         
         // Store it and add to local items
-        storeManuallyAddedItem(localOverride)
-          .then(() => {
+        const storeOverridePromise = async () => {
+          try {
+            const storedOverride = await storeManuallyAddedItem(localOverride);
             // Remove the original item by filtering it out when we merge arrays
-            setLocallyAddedItems(prev => [...prev.filter(i => i.id !== `local-override-${updatedItem.id}`), localOverride]);
+            setLocallyAddedItems(prev => [...prev.filter(i => i.id !== `local-override-${updatedItem.id}`), storedOverride]);
             
             // Flag it as manually selected
             setManuallySelectedItems(prev => ({
@@ -253,11 +260,13 @@ const PurchasingAssistant = () => {
             setTimeout(() => {
               refetchValidation();
             }, 100);
-          })
-          .catch(error => {
+          } catch (error) {
             toast.error("Failed to update item");
             console.error(error);
-          });
+          }
+        };
+        
+        storeOverridePromise();
       }
     }
   }, [selectedItems, locallyAddedItems, refetchValidation]);
@@ -342,13 +351,14 @@ const PurchasingAssistant = () => {
         <AppSidebar />
         <div className="flex-1">
           <SidebarToggle />
-          <div className="p-6 md:p-8">
-            <div className="flex justify-between items-start mb-6">
+          <div className="p-4 md:p-6 max-w-6xl mx-auto">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
               <PurchasingHeader />
               
               <Button 
                 onClick={handlePlaceOrders}
                 disabled={selectedItems.length === 0 || addMissingItemMutation.isPending}
+                size="lg"
                 className="ml-auto"
               >
                 <CheckCircle className="mr-2 h-4 w-4" />
@@ -361,49 +371,64 @@ const PurchasingAssistant = () => {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
               </div>
             ) : (
-              <div className="space-y-8">
-                <OrderCoverageSummary 
-                  selectedItems={selectedItems} 
-                  chefRequests={chefRequests}
-                />
-                
-                <MissingItemsAlert 
-                  selectedItems={selectedItems} 
-                  chefRequests={chefRequests}
-                  onAddMissingItem={handleAddMissingItem}
-                  onSkipItem={handleSkipMissingItem}
-                />
-                
-                {validationResults && !validationResults.isValid && (
-                  <Card className="border-amber-200">
-                    <CardHeader className="bg-amber-50 rounded-t-lg border-b border-amber-100">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="h-5 w-5 text-amber-500" />
-                        <CardTitle className="text-xl font-semibold text-amber-700">Data Validation Issues</CardTitle>
-                      </div>
-                      <CardDescription className="text-amber-600">
-                        Please review the following issues before placing orders
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-4">
-                      <ul className="space-y-2">
-                        {validationIssues.map((issue, index) => (
-                          <li key={index} className="flex items-start gap-2 text-amber-800">
-                            <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-amber-600" />
-                            <span>{issue}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                )}
-                
-                <SupplierOrderMapping 
-                  selectedItems={selectedItems} 
-                  manuallySelectedItems={manuallySelectedItems}
-                  onUpdateItemQuantity={handleUpdateItemQuantity}
-                  onAddManualItem={handleAddManualItem}
-                />
+              <div className="grid gap-6">
+                {/* Card with tabs for better organization */}
+                <Card className="shadow-md">
+                  <Tabs defaultValue="orders" className="w-full">
+                    <TabsList className="w-full grid grid-cols-3 mb-2">
+                      <TabsTrigger value="summary">Coverage Summary</TabsTrigger>
+                      <TabsTrigger value="missing">Missing Items</TabsTrigger>
+                      <TabsTrigger value="orders">Supplier Orders</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="summary" className="mt-0">
+                      <CardContent className="pt-2">
+                        <OrderCoverageSummary 
+                          selectedItems={selectedItems} 
+                          chefRequests={chefRequests}
+                        />
+                      </CardContent>
+                    </TabsContent>
+                    
+                    <TabsContent value="missing" className="mt-0">
+                      <CardContent className="pt-2">
+                        <MissingItemsAlert 
+                          selectedItems={selectedItems} 
+                          chefRequests={chefRequests}
+                          onAddMissingItem={handleAddMissingItem}
+                          onSkipItem={handleSkipMissingItem}
+                        />
+                      </CardContent>
+                    </TabsContent>
+                    
+                    <TabsContent value="orders" className="mt-0">
+                      <CardContent className="pt-2">
+                        {validationResults && !validationResults.isValid && (
+                          <Alert variant="default" className="mb-4 bg-amber-50 border-amber-200 text-amber-800">
+                            <AlertTriangle className="h-4 w-4 text-amber-600" />
+                            <AlertTitle>Data Validation Issues</AlertTitle>
+                            <AlertDescription>
+                              <div className="max-h-28 overflow-y-auto">
+                                <ul className="list-disc list-inside space-y-1">
+                                  {validationIssues.map((issue, index) => (
+                                    <li key={index}>{issue}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                        
+                        <SupplierOrderMapping 
+                          selectedItems={selectedItems} 
+                          manuallySelectedItems={manuallySelectedItems}
+                          onUpdateItemQuantity={handleUpdateItemQuantity}
+                          onAddManualItem={handleAddManualItem}
+                        />
+                      </CardContent>
+                    </TabsContent>
+                  </Tabs>
+                </Card>
               </div>
             )}
           </div>
@@ -417,12 +442,11 @@ const PurchasingAssistant = () => {
             <DialogTitle>Review & Confirm Orders</DialogTitle>
             <DialogDescription>
               You are about to place orders with {supplierGroups.length} suppliers for a total of {selectedItems.length} items.
-              Please review each order carefully before confirming.
             </DialogDescription>
           </DialogHeader>
           
           <Tabs defaultValue={supplierGroups.length > 0 ? (supplierGroups[0]?.supplierId || "summary") : "summary"}>
-            <TabsList className="w-full">
+            <TabsList className="w-full mb-2">
               <TabsTrigger value="summary">Summary</TabsTrigger>
               {supplierGroups.map(group => (
                 <TabsTrigger key={group.supplierId} value={group.supplierId}>
@@ -435,9 +459,6 @@ const PurchasingAssistant = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Order Summary</CardTitle>
-                  <CardDescription>
-                    Overview of all supplier orders
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Table>
@@ -469,23 +490,19 @@ const PurchasingAssistant = () => {
                 </CardFooter>
               </Card>
               
-              {/* Validation warnings */}
-              {hasValidationIssues && (
-                <div className="mt-4">
+              {/* Simplified warnings section */}
+              <div className="mt-4 flex flex-col gap-2">
+                {hasValidationIssues && (
                   <Alert variant="default" className="bg-amber-50 border-amber-200 text-amber-800">
                     <AlertTriangle className="h-4 w-4 text-amber-600" />
                     <AlertTitle>Validation Issues</AlertTitle>
                     <AlertDescription>
                       There are {validationIssues.length} validation issues that should be addressed.
-                      Check each supplier tab for details.
                     </AlertDescription>
                   </Alert>
-                </div>
-              )}
-              
-              {/* Missing items summary */}
-              {skippedItems.length > 0 && (
-                <div className="mt-4">
+                )}
+                
+                {skippedItems.length > 0 && (
                   <Alert variant="default" className="bg-blue-50 border-blue-200 text-blue-800">
                     <Info className="h-4 w-4 text-blue-600" />
                     <AlertTitle>Skipped Items</AlertTitle>
@@ -493,8 +510,8 @@ const PurchasingAssistant = () => {
                       {skippedItems.length} items were skipped from the original chef requests.
                     </AlertDescription>
                   </Alert>
-                </div>
-              )}
+                )}
+              </div>
             </TabsContent>
             
             {supplierGroups.map(group => {
@@ -510,19 +527,19 @@ const PurchasingAssistant = () => {
                         <div>
                           <CardTitle>{group.supplierName}</CardTitle>
                           <CardDescription>
-                            {group.itemCount} items, total value: ${group.totalValue.toFixed(2)}
+                            {group.itemCount} items, total: ${group.totalValue.toFixed(2)}
                           </CardDescription>
                         </div>
                         
                         {group.isSmallOrder && (
-                          <Badge variant="outline" className="bg-amber-100 text-amber-800 hover:bg-amber-100">
+                          <Badge variant="outline" className="bg-amber-100 text-amber-800">
                             Small Order
                           </Badge>
                         )}
                       </div>
                     </CardHeader>
                     <CardContent>
-                      {/* Validation issues for this supplier */}
+                      {/* Simplified validation issues */}
                       {supplierValidationIssues.length > 0 && (
                         <Alert variant="default" className="mb-4 bg-amber-50 border-amber-200 text-amber-800">
                           <AlertTriangle className="h-4 w-4 text-amber-600" />
@@ -575,11 +592,10 @@ const PurchasingAssistant = () => {
                       
                       {/* Special instructions */}
                       <div className="mt-4">
-                        <label htmlFor={`instructions-${group.supplierId}`} className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                           Special Instructions
                         </label>
                         <Textarea 
-                          id={`instructions-${group.supplierId}`}
                           placeholder="Add any special instructions for this supplier..."
                           value={specialInstructions[group.supplierId] || ''}
                           onChange={(e) => handleUpdateInstructions(group.supplierId, e.target.value)}
@@ -599,11 +615,11 @@ const PurchasingAssistant = () => {
               Cancel
             </Button>
             
-            {/* Conditionally show warnings if needed but don't block confirmation */}
+            {/* Simplified warning display */}
             {hasValidationIssues && (
               <div className="flex items-center text-amber-600 text-sm mr-4">
                 <AlertTriangle className="h-4 w-4 mr-1" />
-                <span>There are validation issues</span>
+                <span>Issues exist</span>
               </div>
             )}
             
