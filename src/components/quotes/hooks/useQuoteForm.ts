@@ -1,10 +1,10 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { toast as sonnerToast } from 'sonner';
 import { generateItemsFromSupplier } from '../quoteFormUtils';
 import { ItemType } from '../ItemsList';
+import { convertChefRequestToQuoteRequest, createQuoteRequest } from '@/services/quoteRequestsService';
 
 interface UseQuoteFormProps {
   chefRequestData?: {
@@ -16,9 +16,10 @@ interface UseQuoteFormProps {
     }[];
     dueDate?: Date;
   };
+  chefRequestId?: string;
 }
 
-export const useQuoteForm = ({ chefRequestData }: UseQuoteFormProps = {}) => {
+export const useQuoteForm = ({ chefRequestData, chefRequestId }: UseQuoteFormProps = {}) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -37,13 +38,15 @@ export const useQuoteForm = ({ chefRequestData }: UseQuoteFormProps = {}) => {
   );
 
   const [selectedSupplierId, setSelectedSupplierId] = useState<string>("");
+  const [selectedSupplierName, setSelectedSupplierName] = useState<string>("");
   const [isUrgent, setIsUrgent] = useState<boolean>(false);
   const [notes, setNotes] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Handle supplier selection
-  const handleSupplierChange = (supplierId: string) => {
+  const handleSupplierChange = (supplierId: string, supplierName: string) => {
     setSelectedSupplierId(supplierId);
+    setSelectedSupplierName(supplierName);
     
     // Only override items if not coming from chef request
     if (!chefRequestData) {
@@ -67,7 +70,7 @@ export const useQuoteForm = ({ chefRequestData }: UseQuoteFormProps = {}) => {
     ));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
@@ -104,19 +107,38 @@ export const useQuoteForm = ({ chefRequestData }: UseQuoteFormProps = {}) => {
       return;
     }
 
-    // In a real app, you would send this data to your backend
-    toast({
-      title: "Quote Request Sent",
-      description: "Your quote request has been successfully sent to the supplier.",
-    });
-    
-    // Show a success toast and redirect to the quotes page
-    sonnerToast.success("Quote request submitted successfully");
-    
-    // Redirect back to quotes page
-    setTimeout(() => {
-      navigate('/quotes');
-    }, 1500);
+    try {
+      // If this is from a chef request, convert it to a quote request
+      if (chefRequestId) {
+        await convertChefRequestToQuoteRequest(
+          chefRequestId,
+          selectedSupplierId,
+          selectedSupplierName
+        );
+        sonnerToast.success("Chef request converted to quote request successfully");
+      } else {
+        // Otherwise, create a new quote request directly
+        await createQuoteRequest(
+          title,
+          selectedSupplierId,
+          selectedSupplierName,
+          date || new Date(),
+          "General", // Default category
+          items
+        );
+        sonnerToast.success("Quote request submitted successfully");
+      }
+
+      // Redirect back to quotes page
+      setTimeout(() => {
+        navigate('/quotes');
+      }, 1500);
+    } catch (error) {
+      console.error("Error submitting quote request:", error);
+      sonnerToast.error("Failed to submit quote request");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return {

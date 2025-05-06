@@ -2,8 +2,8 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DateSelector } from '../DateSelector';
-import { SupplierSelector } from '../SupplierSelector';
+import { SupplierSelector } from '@/components/quotes/SupplierSelector';
+import { DateSelector } from '@/components/quotes/DateSelector';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -13,7 +13,7 @@ interface FormBasicFieldsProps {
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
   selectedSupplierId: string;
-  onSupplierChange: (supplierId: string) => void;
+  onSupplierChange: (supplierId: string, supplierName: string) => void;
   isUrgent: boolean;
   setIsUrgent: (isUrgent: boolean) => void;
   notes: string;
@@ -33,54 +33,53 @@ export const FormBasicFields: React.FC<FormBasicFieldsProps> = ({
   setNotes
 }) => {
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="title">Request Title</Label>
-          <Input 
-            id="title" 
-            placeholder="e.g., Weekly Produce Order" 
-            required 
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-        
-        <SupplierSelector 
-          selectedSupplierId={selectedSupplierId}
-          onSupplierChange={onSupplierChange}
+    <div className="space-y-4">
+      {/* Title field */}
+      <div>
+        <Label htmlFor="title">Quote Title</Label>
+        <Input
+          id="title"
+          placeholder="E.g., Weekly Produce Order"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="mt-1"
         />
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <DateSelector 
-          date={date} 
-          onDateChange={setDate} 
-          label="Required By Date"
+      
+      {/* Supplier selection */}
+      <SupplierSelector 
+        value={selectedSupplierId} 
+        onValueChange={onSupplierChange} 
+      />
+      
+      {/* Date selection */}
+      <DateSelector 
+        label="Required By Date"
+        date={date} 
+        setDate={setDate} 
+      />
+      
+      {/* Urgent flag */}
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="urgent"
+          checked={isUrgent}
+          onCheckedChange={setIsUrgent}
         />
-        
-        <div className="space-y-2">
-          <Label htmlFor="urgent">Priority</Label>
-          <div className="flex items-center space-x-2 h-10 pt-2">
-            <Switch 
-              id="urgent" 
-              checked={isUrgent}
-              onCheckedChange={setIsUrgent}
-            />
-            <Label htmlFor="urgent">Mark as Urgent</Label>
-          </div>
-        </div>
+        <Label htmlFor="urgent" className="cursor-pointer">Mark as Urgent</Label>
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="notes">Additional Notes</Label>
-        <Textarea 
-          id="notes" 
-          placeholder="Any specific requirements or notes for the supplier" 
+      
+      {/* Notes field */}
+      <div>
+        <Label htmlFor="notes">Notes for Supplier</Label>
+        <Textarea
+          id="notes"
+          placeholder="Any additional information for the supplier..."
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
+          className="mt-1"
         />
       </div>
-    </>
+    </div>
   );
 };

@@ -39,7 +39,7 @@ export function QuoteForm({ chefRequestId, chefRequestData }: QuoteFormProps) {
     handleRemoveItem,
     handleItemChange,
     handleSubmit
-  } = useQuoteForm({ chefRequestData });
+  } = useQuoteForm({ chefRequestData, chefRequestId });
 
   return (
     <form onSubmit={handleSubmit}>

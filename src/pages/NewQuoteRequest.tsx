@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Info, ChefHat } from 'lucide-react';
-import { allRequests } from '@/components/chef/requests/RequestsData';
 import { Request } from '@/components/chef/requests/types';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 const NewQuoteRequest = () => {
   const [activeTab, setActiveTab] = useState('new');
@@ -20,24 +21,71 @@ const NewQuoteRequest = () => {
   const chefRequestId = searchParams.get('chefRequestId');
   const [chefRequestData, setChefRequestData] = useState<Request | null>(null);
   
-  // Find chef request data if ID is provided
-  useEffect(() => {
-    if (chefRequestId) {
-      const requestData = allRequests.find(r => r.id === chefRequestId);
-      if (requestData) {
-        setChefRequestData(requestData);
-        setActiveTab('new'); // Force the new tab when coming from a chef request
-      }
-    }
-  }, [chefRequestId]);
+  // Fetch pending chef requests that don't have quotes yet
+  const fetchPendingChefRequests = async () => {
+    try {
+      // Get all requests that are in pending or approved status
+      const { data: requests, error: requestsError } = await supabase
+        .from('requests')
+        .select('*, request_items(*)')
+        .in('status', ['pending', 'approved']);
 
-  // In a real app, this would come from an API or database
-  // Filter requests that are in "pending" or "approved" status 
-  // and don't have quotes yet - using optional chaining to safely access quotes property
-  const chefRequests = allRequests.filter(
-    req => (req.status === 'pending' || req.status === 'approved') && 
-    (!req.quotes?.length)
-  );
+      if (requestsError) throw requestsError;
+      
+      // Fetch quotes to check which requests already have quotes
+      const { data: quotes, error: quotesError } = await supabase
+        .from('quotes')
+        .select('request_id');
+        
+      if (quotesError) throw quotesError;
+      
+      const requestsWithQuotes = new Set(quotes.map(q => q.request_id));
+      
+      // Filter to get only requests without quotes
+      return requests.filter(r => !requestsWithQuotes.has(r.id));
+    } catch (error) {
+      console.error("Error fetching pending chef requests:", error);
+      return [];
+    }
+  };
+
+  // Fetch specific chef request if ID is provided
+  const fetchChefRequest = async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('requests')
+        .select('*, request_items(*)')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error fetching chef request:", error);
+      return null;
+    }
+  };
+  
+  // Use React Query to fetch chef requests
+  const { data: chefRequests = [] } = useQuery({
+    queryKey: ['chefRequests', 'pending'],
+    queryFn: fetchPendingChefRequests,
+  });
+  
+  // Fetch specific chef request data if ID is provided
+  useEffect(() => {
+    const getChefRequestData = async () => {
+      if (chefRequestId) {
+        const data = await fetchChefRequest(chefRequestId);
+        if (data) {
+          setChefRequestData(data);
+          setActiveTab('new'); // Force the new tab when coming from a chef request
+        }
+      }
+    };
+    
+    getChefRequestData();
+  }, [chefRequestId]);
 
   const handleCreateFromChefRequest = (requestId: string) => {
     navigate(`/quotes/new?chefRequestId=${requestId}`);
@@ -119,7 +167,7 @@ const NewQuoteRequest = () => {
                           <div>
                             <CardTitle>{request.title}</CardTitle>
                             <p className="text-sm text-gray-500">
-                              Requested for {new Date(request.dueDate).toLocaleDateString()}
+                              Requested for {new Date(request.due_date).toLocaleDateString()}
                             </p>
                           </div>
                           <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
@@ -130,15 +178,15 @@ const NewQuoteRequest = () => {
                       <CardContent>
                         <h3 className="font-medium text-sm mb-2">Requested Items:</h3>
                         <ul className="space-y-1">
-                          {request.items.slice(0, 5).map((item, index) => (
+                          {request.request_items.slice(0, 5).map((item, index) => (
                             <li key={index} className="text-sm flex justify-between">
                               <span>{item.name}</span>
                               <span className="text-gray-600">{item.quantity} {item.unit}</span>
                             </li>
                           ))}
-                          {request.items.length > 5 && (
+                          {request.request_items.length > 5 && (
                             <li className="text-sm text-gray-500">
-                              + {request.items.length - 5} more items
+                              + {request.request_items.length - 5} more items
                             </li>
                           )}
                         </ul>
